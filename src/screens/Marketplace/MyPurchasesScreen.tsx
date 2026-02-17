@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import CustomIcon from '../../components/CustomIcon';
 import contentService, {Purchase} from '../../api/services/contentService';
+import { COLORS } from '../../constants/colors';
 import {Alert, Linking} from 'react-native';
 
 const MyPurchasesScreen = ({navigation}: any) => {
@@ -80,7 +81,7 @@ const MyPurchasesScreen = ({navigation}: any) => {
                 : 'notebook'
             }
             size={24}
-            color="#6366F1"
+            color="COLORS.primary"
             type="material-community"
           />
         </View>
@@ -120,7 +121,7 @@ const MyPurchasesScreen = ({navigation}: any) => {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#6366F1" />
+        <ActivityIndicator size="large" color="COLORS.primary" />
       </View>
     );
   }
@@ -175,7 +176,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   browseButton: {
-    backgroundColor: '#6366F1',
+    backgroundColor: 'COLORS.primary',
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 12,
@@ -250,11 +251,11 @@ const styles = StyleSheet.create({
   price: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#6366F1',
+    color: 'COLORS.primary',
   },
   downloadButton: {
     flexDirection: 'row',
-    backgroundColor: '#6366F1',
+    backgroundColor: 'COLORS.primary',
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 8,

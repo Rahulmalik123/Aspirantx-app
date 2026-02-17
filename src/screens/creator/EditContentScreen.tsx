@@ -15,6 +15,7 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import CustomIcon from '../../components/CustomIcon';
 import apiClient from '../../api/client';
 import { ENDPOINTS } from '../../api/endpoints';
+import { COLORS } from '../../constants/colors';
 import { showMessage } from 'react-native-flash-message';
 import { imagePickerUtils } from '../../utils/imagePicker.utils';
 import { documentPickerUtils } from '../../utils/documentPicker.utils';
@@ -299,7 +300,7 @@ const EditContentScreen = () => {
   if (initialLoading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#6366F1" />
+        <ActivityIndicator size="large" color="COLORS.primary" />
         <Text style={styles.loadingText}>Loading content...</Text>
       </View>
     );
@@ -333,7 +334,7 @@ const EditContentScreen = () => {
                 <CustomIcon
                   name={type.icon}
                   size={16}
-                  color={formData.contentType === type.value ? '#6366F1' : '#6B7280'}
+                  color={formData.contentType === type.value ? 'COLORS.primary' : '#6B7280'}
                   type="material-community"
                 />
                 <Text style={[
@@ -404,7 +405,7 @@ const EditContentScreen = () => {
               <CustomIcon
                 name={formData.isFree ? "checkbox-marked" : "checkbox-blank-outline"}
                 size={20}
-                color={formData.isFree ? "#6366F1" : "#9CA3AF"}
+                color={formData.isFree ? "COLORS.primary" : "#9CA3AF"}
                 type="material-community"
               />
               <Text style={[
@@ -506,7 +507,7 @@ const EditContentScreen = () => {
                   <CustomIcon
                     name="file-document"
                     size={20}
-                    color="#6366F1"
+                    color="COLORS.primary"
                     type="material-community"
                   />
                   <View style={styles.fileInfo}>
@@ -533,7 +534,7 @@ const EditContentScreen = () => {
             <CustomIcon
               name={selectedFile ? "check-circle" : "cloud-upload"}
               size={24}
-              color={selectedFile ? "#10B981" : "#6366F1"}
+              color={selectedFile ? "#10B981" : "COLORS.primary"}
               type="material-community"
             />
             <View style={styles.uploadTextContainer}>
@@ -544,7 +545,7 @@ const EditContentScreen = () => {
                 {selectedFile ? 'File selected' : 'PDF, Video, or other supported formats'}
               </Text>
             </View>
-            {uploadingFile && <ActivityIndicator size="small" color="#6366F1" />}
+            {uploadingFile && <ActivityIndicator size="small" color="COLORS.primary" />}
           </TouchableOpacity>
         </View>
 
@@ -564,7 +565,7 @@ const EditContentScreen = () => {
               <CustomIcon
                 name="image"
                 size={24}
-                color="#6366F1"
+                color="COLORS.primary"
                 type="material-community"
               />
             )}
@@ -574,7 +575,7 @@ const EditContentScreen = () => {
               </Text>
               <Text style={styles.uploadButtonSubtext}>JPG, PNG (Recommended: 800x600)</Text>
             </View>
-            {uploadingThumbnail && <ActivityIndicator size="small" color="#6366F1" />}
+            {uploadingThumbnail && <ActivityIndicator size="small" color="COLORS.primary" />}
           </TouchableOpacity>
         </View>
 
@@ -702,14 +703,14 @@ const styles = StyleSheet.create({
   },
   chipSelected: {
     backgroundColor: '#EEF2FF',
-    borderColor: '#6366F1',
+    borderColor: 'COLORS.primary',
   },
   chipText: {
     fontSize: 14,
     color: '#6B7280',
   },
   chipTextSelected: {
-    color: '#6366F1',
+    color: 'COLORS.primary',
     fontWeight: '500',
   },
   pricingContainer: {
@@ -726,7 +727,7 @@ const styles = StyleSheet.create({
     borderColor: '#E5E7EB',
   },
   freeToggleActive: {
-    borderColor: '#6366F1',
+    borderColor: 'COLORS.primary',
     backgroundColor: '#EEF2FF',
   },
   freeText: {
@@ -734,7 +735,7 @@ const styles = StyleSheet.create({
     color: '#6B7280',
   },
   freeTextActive: {
-    color: '#6366F1',
+    color: 'COLORS.primary',
     fontWeight: '500',
   },
   priceInputContainer: {
@@ -822,7 +823,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#6366F1',
+    backgroundColor: 'COLORS.primary',
     paddingVertical: 16,
     borderRadius: 8,
     marginTop: 32,

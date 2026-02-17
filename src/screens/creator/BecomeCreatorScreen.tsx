@@ -14,6 +14,7 @@ import { useDispatch } from 'react-redux';
 import CustomIcon from '../../components/CustomIcon';
 import apiClient from '../../api/client';
 import { ENDPOINTS } from '../../api/endpoints';
+import { COLORS } from '../../constants/colors';
 import { showMessage } from 'react-native-flash-message';
 import { useAppSelector } from '../../hooks/useRedux';
 import { fetchProfile } from '../../store/slices/userSlice';
@@ -134,7 +135,7 @@ const BecomeCreatorScreen = () => {
 
       {profileLoading ? (
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#6366F1" />
+          <ActivityIndicator size="large" color="COLORS.primary" />
           <Text style={styles.loadingText}>Loading...</Text>
         </View>
       ) : isCreator && creatorProfile ? (
@@ -153,7 +154,7 @@ const BecomeCreatorScreen = () => {
           {/* Quick Stats */}
           <View style={styles.statsGrid}>
             <View style={styles.statCard}>
-              <CustomIcon name="currency-inr" size={20} color="#6366F1" type="material-community" />
+              <CustomIcon name="currency-inr" size={20} color="COLORS.primary" type="material-community" />
               <Text style={styles.statValue}>₹{creatorProfile.totalEarnings.toLocaleString()}</Text>
               <Text style={styles.statLabel}>Earnings</Text>
             </View>
@@ -211,7 +212,7 @@ const BecomeCreatorScreen = () => {
               style={styles.secondaryButton}
               onPress={() => navigation.navigate('UploadContent' as never)}
             >
-              <CustomIcon name="cloud-upload" size={18} color="#6366F1" type="material-community" />
+              <CustomIcon name="cloud-upload" size={18} color="COLORS.primary" type="material-community" />
               <Text style={styles.secondaryButtonText}>Upload Content</Text>
             </TouchableOpacity>
           </View>
@@ -220,7 +221,7 @@ const BecomeCreatorScreen = () => {
         <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {/* Info Card */}
         <View style={styles.infoCard}>
-          <CustomIcon name="star-circle" size={48} color="#6366F1" type="material-community" />
+          <CustomIcon name="star-circle" size={48} color="COLORS.primary" type="material-community" />
           <Text style={styles.infoTitle}>Join Our Creator Community</Text>
           <Text style={styles.infoText}>
             Share your knowledge, help students succeed, and earn money by creating quality content
@@ -458,7 +459,7 @@ const styles = StyleSheet.create({
   expertiseChipText: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#6366F1',
+    color: 'COLORS.primary',
   },
   verifiedBadge: {
     flexDirection: 'row',
@@ -483,7 +484,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    backgroundColor: '#6366F1',
+    backgroundColor: 'COLORS.primary',
     borderRadius: 10,
     padding: 14,
   },
@@ -501,12 +502,12 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     padding: 14,
     borderWidth: 1.5,
-    borderColor: '#6366F1',
+    borderColor: 'COLORS.primary',
   },
   secondaryButtonText: {
     fontSize: 15,
     fontWeight: '600',
-    color: '#6366F1',
+    color: 'COLORS.primary',
   },
   // Existing Form Styles
   infoCard: {
@@ -572,7 +573,7 @@ const styles = StyleSheet.create({
   },
   chipSelected: {
     backgroundColor: '#EEF2FF',
-    borderColor: '#6366F1',
+    borderColor: 'COLORS.primary',
   },
   chipText: {
     fontSize: 14,
@@ -580,7 +581,7 @@ const styles = StyleSheet.create({
     color: '#6B7280',
   },
   chipTextSelected: {
-    color: '#6366F1',
+    color: 'COLORS.primary',
     fontWeight: '600',
   },
   textArea: {
@@ -605,7 +606,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   submitButton: {
-    backgroundColor: '#6366F1',
+    backgroundColor: 'COLORS.primary',
     borderRadius: 12,
     padding: 18,
     alignItems: 'center',

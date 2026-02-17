@@ -15,6 +15,7 @@ import { useNavigation } from '@react-navigation/native';
 import CustomIcon from '../../components/CustomIcon';
 import apiClient from '../../api/client';
 import { ENDPOINTS } from '../../api/endpoints';
+import { COLORS } from '../../constants/colors';
 import { showMessage } from 'react-native-flash-message';
 import { imagePickerUtils } from '../../utils/imagePicker.utils';
 import { documentPickerUtils } from '../../utils/documentPicker.utils';
@@ -267,7 +268,7 @@ const UploadContentScreen = () => {
                 <CustomIcon
                   name={type.icon}
                   size={16}
-                  color={formData.contentType === type.value ? '#6366F1' : '#6B7280'}
+                  color={formData.contentType === type.value ? 'COLORS.primary' : '#6B7280'}
                   type="material-community"
                 />
                 <Text style={[
@@ -359,7 +360,7 @@ const UploadContentScreen = () => {
           
           {!formData.isFree && formData.price && (
             <View style={styles.earningInfo}>
-              <CustomIcon name="information-outline" size={16} color="#6366F1" type="material-community" />
+              <CustomIcon name="information-outline" size={16} color="COLORS.primary" type="material-community" />
               <Text style={styles.earningText}>
                 You'll earn ₹{(Number(formData.price) * 0.7).toFixed(0)} (70%) per sale
               </Text>
@@ -448,9 +449,9 @@ const UploadContentScreen = () => {
             disabled={uploadingFile}
           >
             {uploadingFile ? (
-              <ActivityIndicator size="small" color="#6366F1" />
+              <ActivityIndicator size="small" color="COLORS.primary" />
             ) : (
-              <CustomIcon name="file-pdf-box" size={24} color="#6366F1" type="material-community" />
+              <CustomIcon name="file-pdf-box" size={24} color="COLORS.primary" type="material-community" />
             )}
             <Text style={styles.fileButtonText}>
               {uploadingFile ? 'Uploading...' : selectedFile ? selectedFile.name : 'Choose PDF File'}
@@ -478,11 +479,11 @@ const UploadContentScreen = () => {
             disabled={uploadingThumbnail}
           >
             {uploadingThumbnail ? (
-              <ActivityIndicator size="small" color="#6366F1" />
+              <ActivityIndicator size="small" color="COLORS.primary" />
             ) : thumbnail ? (
               <Image source={{ uri: thumbnail.uri }} style={styles.thumbnailPreview} />
             ) : (
-              <CustomIcon name="image" size={24} color="#6366F1" type="material-community" />
+              <CustomIcon name="image" size={24} color="COLORS.primary" type="material-community" />
             )}
             <Text style={styles.fileButtonText}>
               {uploadingThumbnail ? 'Uploading...' : thumbnail ? thumbnail.fileName || 'Thumbnail' : 'Choose Image'}
@@ -597,7 +598,7 @@ const styles = StyleSheet.create({
   },
   chipSelected: {
     backgroundColor: '#EEF2FF',
-    borderColor: '#6366F1',
+    borderColor: 'COLORS.primary',
   },
   chipText: {
     fontSize: 14,
@@ -605,7 +606,7 @@ const styles = StyleSheet.create({
     color: '#6B7280',
   },
   chipTextSelected: {
-    color: '#6366F1',
+    color: 'COLORS.primary',
     fontWeight: '600',
   },
   chipsContainer: {
@@ -650,7 +651,7 @@ const styles = StyleSheet.create({
   currencySymbol: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#6366F1',
+    color: 'COLORS.primary',
     marginRight: 8,
   },
   priceInput: {
@@ -702,7 +703,7 @@ const styles = StyleSheet.create({
   },
   chipSelected: {
     backgroundColor: '#EEF2FF',
-    borderColor: '#6366F1',
+    borderColor: 'COLORS.primary',
   },
   chipText: {
     fontSize: 14,
@@ -710,7 +711,7 @@ const styles = StyleSheet.create({
     color: '#6B7280',
   },
   chipTextSelected: {
-    color: '#6366F1',
+    color: 'COLORS.primary',
     fontWeight: '600',
   },
   fileButton: {
@@ -751,7 +752,7 @@ const styles = StyleSheet.create({
   },
   uploadButton: {
     flexDirection: 'row',
-    backgroundColor: '#6366F1',
+    backgroundColor: 'COLORS.primary',
     borderRadius: 12,
     padding: 18,
     alignItems: 'center',

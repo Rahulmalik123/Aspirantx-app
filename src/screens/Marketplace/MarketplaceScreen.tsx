@@ -15,6 +15,7 @@ import CustomIcon from '../../components/CustomIcon';
 import contentService, {Content} from '../../api/services/contentService';
 import apiClient from '../../api/client';
 import { ENDPOINTS } from '../../api/endpoints';
+import { COLORS } from '../../constants/colors';
 
 const MarketplaceScreen = ({navigation}: any) => {
   const [contents, setContents] = useState<Content[]>([]);
@@ -101,7 +102,7 @@ const MarketplaceScreen = ({navigation}: any) => {
     if (!loadingMore) return null;
     return (
       <View style={{padding: 20}}>
-        <ActivityIndicator size="small" color="#6366F1" />
+        <ActivityIndicator size="small" color={COLORS.primary} />
       </View>
     );
   };
@@ -187,9 +188,10 @@ const MarketplaceScreen = ({navigation}: any) => {
     
     // Default image based on content type
     const getDefaultImage = (type: string) => {
+      const primaryColor = COLORS.primary.replace('#', '');
       switch (type) {
         case 'pdf':
-          return 'https://via.placeholder.com/150/6366F1/FFFFFF?text=PDF';
+          return `https://via.placeholder.com/150/${primaryColor}/FFFFFF?text=PDF`;
         case 'video':
           return 'https://via.placeholder.com/150/EF4444/FFFFFF?text=VIDEO';
         case 'ebook':
@@ -298,7 +300,7 @@ const MarketplaceScreen = ({navigation}: any) => {
                       <CustomIcon
                         name={type.icon}
                         size={18}
-                        color={selectedType === type.value ? '#6366F1' : '#666'}
+                        color={selectedType === type.value ? COLORS.primary : '#666'}
                         type="material-community"
                       />
                       <Text
@@ -416,7 +418,7 @@ const MarketplaceScreen = ({navigation}: any) => {
               <CustomIcon
                 name="package-variant"
                 size={20}
-                color="#6366F1"
+                color={COLORS.primary}
                 type="material-community"
               />
             </TouchableOpacity>
@@ -466,7 +468,7 @@ const MarketplaceScreen = ({navigation}: any) => {
             <CustomIcon
               name="filter-variant"
               size={20}
-              color="#6366F1"
+              color={COLORS.primary}
               type="material-community"
             />
           </TouchableOpacity>
@@ -487,7 +489,7 @@ const MarketplaceScreen = ({navigation}: any) => {
                 {contentTypes.find(t => t.value === selectedType)?.label}
               </Text>
               <TouchableOpacity onPress={() => setSelectedType('all')}>
-                <CustomIcon name="close-circle" size={16} color="#6366F1" type="material-community" />
+                <CustomIcon name="close-circle" size={16} color={COLORS.primary} type="material-community" />
               </TouchableOpacity>
             </View>
           )}
@@ -497,7 +499,7 @@ const MarketplaceScreen = ({navigation}: any) => {
                 {availableExams.find(e => e._id === selectedExam)?.name}
               </Text>
               <TouchableOpacity onPress={() => setSelectedExam('all')}>
-                <CustomIcon name="close-circle" size={16} color="#6366F1" type="material-community" />
+                <CustomIcon name="close-circle" size={16} color={COLORS.primary} type="material-community" />
               </TouchableOpacity>
             </View>
           )}
@@ -507,7 +509,7 @@ const MarketplaceScreen = ({navigation}: any) => {
                 {sortOptions.find(s => s.value === sortBy)?.label}
               </Text>
               <TouchableOpacity onPress={() => setSortBy('latest')}>
-                <CustomIcon name="close-circle" size={16} color="#6366F1" type="material-community" />
+                <CustomIcon name="close-circle" size={16} color={COLORS.primary} type="material-community" />
               </TouchableOpacity>
             </View>
           )}
@@ -517,7 +519,7 @@ const MarketplaceScreen = ({navigation}: any) => {
                 ₹{priceRange.min || '0'} - ₹{priceRange.max || '∞'}
               </Text>
               <TouchableOpacity onPress={() => setPriceRange({min: '', max: ''})}>
-                <CustomIcon name="close-circle" size={16} color="#6366F1" type="material-community" />
+                <CustomIcon name="close-circle" size={16} color={COLORS.primary} type="material-community" />
               </TouchableOpacity>
             </View>
           )}
@@ -534,7 +536,7 @@ const MarketplaceScreen = ({navigation}: any) => {
       {/* Content List */}
       {loading ? (
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#6366F1" />
+          <ActivityIndicator size="large" color={COLORS.primary} />
         </View>
       ) : contents.length === 0 ? (
         <View style={styles.emptyContainer}>
@@ -598,7 +600,7 @@ const styles = StyleSheet.create({
   uploadButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#6366F1',
+    backgroundColor: COLORS.primary,
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 8,
@@ -655,7 +657,7 @@ const styles = StyleSheet.create({
   activeFilterChipText: {
     fontSize: 12,
     fontWeight: '500',
-    color: '#6366F1',
+    color: COLORS.primary,
   },
   clearAllButton: {
     backgroundColor: '#FEE2E2',
@@ -722,7 +724,7 @@ const styles = StyleSheet.create({
   filterOptionActive: {
     backgroundColor: '#EEF2FF',
     borderWidth: 1.5,
-    borderColor: '#6366F1',
+    borderColor: COLORS.primary,
   },
   filterOptionText: {
     fontSize: 13,
@@ -730,7 +732,7 @@ const styles = StyleSheet.create({
     color: '#666',
   },
   filterOptionTextActive: {
-    color: '#6366F1',
+    color: COLORS.primary,
     fontWeight: '600',
   },
   modalFooter: {
@@ -776,7 +778,7 @@ const styles = StyleSheet.create({
   },
   applyButton: {
     flex: 2,
-    backgroundColor: '#6366F1',
+    backgroundColor: COLORS.primary,
     paddingVertical: 14,
     borderRadius: 10,
     alignItems: 'center',
@@ -853,7 +855,7 @@ const styles = StyleSheet.create({
   price: {
     fontSize: 14,
     fontWeight: 'bold',
-    color: '#6366F1',
+    color: COLORS.primary,
   },
   freeTag: {
     fontSize: 12,
@@ -861,7 +863,7 @@ const styles = StyleSheet.create({
     color: '#10B981',
   },
   viewButton: {
-    backgroundColor: '#6366F1',
+    backgroundColor: COLORS.primary,
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 6,

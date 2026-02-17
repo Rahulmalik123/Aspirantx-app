@@ -12,6 +12,7 @@ import CustomIcon from '../../components/CustomIcon';
 import { useNavigation } from '@react-navigation/native';
 import apiClient from '../../api/client';
 import { ENDPOINTS } from '../../api/endpoints';
+import { COLORS } from '../../constants/colors';
 
 const { width } = Dimensions.get('window');
 
@@ -109,7 +110,7 @@ const AnalyticsScreen = () => {
       <View style={styles.tabContent}>
         {/* Stats Grid */}
         <View style={styles.statsGrid}>
-          {renderStatCard('head-question', 'Total Questions', analytics.overall.totalQuestions.toString(), '#6366F1')}
+          {renderStatCard('head-question', 'Total Questions', analytics.overall.totalQuestions.toString(), 'COLORS.primary')}
           {renderStatCard('check-circle', 'Correct Answers', analytics.overall.correctAnswers.toString(), '#10B981')}
           {renderStatCard('percent', 'Accuracy', `${analytics.overall.accuracy.toFixed(1)}%`, '#F59E0B')}
           {renderStatCard('clock-fast', 'Avg Time', `${analytics.overall.averageTime}s`, '#8B5CF6')}
@@ -160,7 +161,7 @@ const AnalyticsScreen = () => {
             analytics.recentActivity.map((activity, index) => (
               <View key={index} style={styles.activityItem}>
                 <View style={styles.activityLeft}>
-                  <CustomIcon name="calendar" size={20} color="#6366F1" type="material-community" />
+                  <CustomIcon name="calendar" size={20} color="COLORS.primary" type="material-community" />
                   <Text style={styles.activityDate}>{new Date(activity.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</Text>
                 </View>
                 <View style={styles.activityRight}>
@@ -259,7 +260,7 @@ const AnalyticsScreen = () => {
   if (loading) {
     return (
       <View style={styles.centerContainer}>
-        <ActivityIndicator size="large" color="#6366F1" />
+        <ActivityIndicator size="large" color="COLORS.primary" />
         <Text style={styles.loadingText}>Loading analytics...</Text>
       </View>
     );
@@ -275,7 +276,7 @@ const AnalyticsScreen = () => {
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Performance Analytics</Text>
           <TouchableOpacity onPress={fetchAnalytics}>
-            <CustomIcon name="refresh" size={24} color="#6366F1" type="material-community" />
+            <CustomIcon name="refresh" size={24} color="COLORS.primary" type="material-community" />
           </TouchableOpacity>
         </View>
         <View style={styles.emptyStateContainer}>
@@ -304,7 +305,7 @@ const AnalyticsScreen = () => {
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Performance Analytics</Text>
         <TouchableOpacity onPress={fetchAnalytics}>
-          <CustomIcon name="refresh" size={24} color="#6366F1" type="material-community" />
+          <CustomIcon name="refresh" size={24} color="COLORS.primary" type="material-community" />
         </TouchableOpacity>
       </View>
 
@@ -388,7 +389,7 @@ const styles = StyleSheet.create({
     borderBottomColor: 'transparent',
   },
   activeTab: {
-    borderBottomColor: '#6366F1',
+    borderBottomColor: 'COLORS.primary',
   },
   tabText: {
     fontSize: 14,
@@ -396,7 +397,7 @@ const styles = StyleSheet.create({
     color: '#6B7280',
   },
   activeTabText: {
-    color: '#6366F1',
+    color: 'COLORS.primary',
   },
   scrollView: {
     flex: 1,
@@ -526,7 +527,7 @@ const styles = StyleSheet.create({
   subjectAccuracy: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#6366F1',
+    color: 'COLORS.primary',
   },
   progressBarContainer: {
     height: 8,
@@ -612,7 +613,7 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   startPracticingButton: {
-    backgroundColor: '#6366F1',
+    backgroundColor: 'COLORS.primary',
     paddingHorizontal: 32,
     paddingVertical: 14,
     borderRadius: 12,

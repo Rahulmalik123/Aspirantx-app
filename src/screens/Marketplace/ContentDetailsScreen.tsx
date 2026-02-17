@@ -15,6 +15,7 @@ import {
 import {useSelector} from 'react-redux';
 import CustomIcon from '../../components/CustomIcon';
 import contentService, {ContentDetails} from '../../api/services/contentService';
+import { COLORS } from '../../constants/colors';
 
 const ContentDetailsScreen = ({route, navigation}: any) => {
   const {contentId} = route.params;
@@ -200,7 +201,7 @@ const ContentDetailsScreen = ({route, navigation}: any) => {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#6366F1" />
+        <ActivityIndicator size="large" color="COLORS.primary" />
       </View>
     );
   }
@@ -281,7 +282,7 @@ const ContentDetailsScreen = ({route, navigation}: any) => {
               <CustomIcon
                 name={getContentIcon(content.contentType)}
                 size={16}
-                color="#6366F1"
+                color="COLORS.primary"
                 type="material-community"
               />
               <Text style={styles.typeText}>
@@ -332,7 +333,7 @@ const ContentDetailsScreen = ({route, navigation}: any) => {
             
             <View style={styles.statCard}>
               <View style={styles.statIconWrapper}>
-                <CustomIcon name="download" size={20} color="#6366F1" type="material-community" />
+                <CustomIcon name="download" size={20} color="COLORS.primary" type="material-community" />
               </View>
               <View style={styles.statInfo}>
                 <Text style={styles.statValue}>{content.totalSales || content.purchaseCount || 0}</Text>
@@ -368,7 +369,7 @@ const ContentDetailsScreen = ({route, navigation}: any) => {
                 <CustomIcon
                   name="eye"
                   size={20}
-                  color="#6366F1"
+                  color="COLORS.primary"
                   type="material-community"
                 />
                 <Text style={styles.previewButtonText}>
@@ -424,7 +425,7 @@ const ContentDetailsScreen = ({route, navigation}: any) => {
                 <CustomIcon
                   name="star-outline"
                   size={48}
-                  color="#6366F1"
+                  color="COLORS.primary"
                   type="material-community"
                 />
                 <Text style={styles.emptyReviewTitle}>Be the first to review!</Text>
@@ -484,7 +485,7 @@ const ContentDetailsScreen = ({route, navigation}: any) => {
             <CustomIcon
               name="account-check"
               size={18}
-              color="#6366F1"
+              color="COLORS.primary"
               type="material-community"
             />
             <Text style={styles.ownContentText}>Your Content</Text>
@@ -673,7 +674,7 @@ const styles = StyleSheet.create({
   typeText: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#6366F1',
+    color: 'COLORS.primary',
   },
   title: {
     fontSize: 24,
@@ -785,7 +786,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: '#EEF2FF',
     borderWidth: 2,
-    borderColor: '#6366F1',
+    borderColor: 'COLORS.primary',
     borderStyle: 'dashed',
     paddingVertical: 14,
     paddingHorizontal: 20,
@@ -795,7 +796,7 @@ const styles = StyleSheet.create({
   previewButtonText: {
     fontSize: 15,
     fontWeight: '600',
-    color: '#6366F1',
+    color: 'COLORS.primary',
   },
   tagsContainer: {
     flexDirection: 'row',
@@ -814,13 +815,13 @@ const styles = StyleSheet.create({
   },
   addReviewText: {
     fontSize: 14,
-    color: '#6366F1',
+    color: 'COLORS.primary',
     fontWeight: '600',
   },
   addReviewButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#6366F1',
+    backgroundColor: 'COLORS.primary',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 8,
@@ -929,7 +930,7 @@ const styles = StyleSheet.create({
   price: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#6366F1',
+    color: 'COLORS.primary',
   },
   freeText: {
     fontSize: 20,
@@ -938,7 +939,7 @@ const styles = StyleSheet.create({
   },
   purchaseButton: {
     flexDirection: 'row',
-    backgroundColor: '#6366F1',
+    backgroundColor: 'COLORS.primary',
     paddingHorizontal: 24,
     paddingVertical: 10,
     borderRadius: 10,
@@ -953,10 +954,10 @@ const styles = StyleSheet.create({
   ownContentButton: {
     backgroundColor: '#EEF2FF',
     borderWidth: 1,
-    borderColor: '#6366F1',
+    borderColor: 'COLORS.primary',
   },
   ownContentText: {
-    color: '#6366F1',
+    color: 'COLORS.primary',
     fontSize: 14,
     fontWeight: '600',
   },
@@ -1031,7 +1032,7 @@ const styles = StyleSheet.create({
     minHeight: 120,
   },
   submitReviewButton: {
-    backgroundColor: '#6366F1',
+    backgroundColor: 'COLORS.primary',
     paddingVertical: 16,
     borderRadius: 12,
     alignItems: 'center',

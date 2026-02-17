@@ -91,7 +91,7 @@ const DailyPracticeScreen = () => {
       case 'in_progress':
         return '#F59E0B';
       default:
-        return '#6366F1';
+        return '#0040a1';
     }
   };
 
@@ -160,7 +160,7 @@ const DailyPracticeScreen = () => {
               <Text style={styles.statText}>{item.score} Score</Text>
             </View>
             <View style={styles.statItem}>
-              <CustomIcon name="trending-up-outline" size={16} color="#6366F1" />
+              <CustomIcon name="trending-up-outline" size={16} color="COLORS.primary" />
               <Text style={styles.statText}>{item.accuracy}% Accuracy</Text>
             </View>
           </>

@@ -1,12 +1,11 @@
 // Color Palette
 export const COLORS = {
   // Primary
-  primary: '#6366F1', // Indigo
-  primaryLight: '#818CF8',
-  primaryDark: '#4F46E5',
+  primary: '#0040a1', // Indigo
+  primaryLight: '#5e9bf7ff',
   
   // Secondary
-  secondary: '#10B981', // Green
+  secondary: '#0040a1', // Green
   secondaryLight: '#34D399',
   secondaryDark: '#059669',
   

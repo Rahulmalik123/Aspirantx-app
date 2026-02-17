@@ -196,7 +196,7 @@ const TestDetailsScreen = () => {
             <View style={styles.statsRow}>
               {test.totalAttempts > 0 && (
                 <View style={styles.statBox}>
-                  <CustomIcon name="people" size={24} color="#6366F1" />
+                  <CustomIcon name="people" size={24} color="COLORS.primary" />
                   <Text style={styles.statValue}>{test.totalAttempts}</Text>
                   <Text style={styles.statLabel}>Total Attempts</Text>
                 </View>

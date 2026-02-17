@@ -190,17 +190,17 @@ const TournamentDetailsScreen = () => {
           {/* Stats Grid */}
           <View style={styles.statsGrid}>
             <View style={styles.statBox}>
-              <CustomIcon name="wallet" type="ionicon" size={20} color="#6366F1" />
+              <CustomIcon name="wallet" type="ionicon" size={20} color="COLORS.primary" />
               <Text style={styles.statValue}>₹{activeTournament.entryFee}</Text>
               <Text style={styles.statLabel}>Entry Fee</Text>
             </View>
             <View style={styles.statBox}>
-              <CustomIcon name="people" type="ionicon" size={20} color="#6366F1" />
+              <CustomIcon name="people" type="ionicon" size={20} color="COLORS.primary" />
               <Text style={styles.statValue}>{activeTournament.currentParticipants || activeTournament.participants || 0}</Text>
               <Text style={styles.statLabel}>Participants</Text>
             </View>
             <View style={styles.statBox}>
-              <CustomIcon name={activeTournament.duration ? 'time' : 'help-circle'} type="ionicon" size={20} color="#6366F1" />
+              <CustomIcon name={activeTournament.duration ? 'time' : 'help-circle'} type="ionicon" size={20} color="COLORS.primary" />
               <Text style={styles.statValue}>{activeTournament.duration || activeTournament.questions?.length || 0} {activeTournament.duration ? 'min' : 'Q'}</Text>
               <Text style={styles.statLabel}>{activeTournament.duration ? 'Duration' : 'Questions'}</Text>
             </View>
@@ -329,7 +329,7 @@ const TournamentDetailsScreen = () => {
             onPress={() => navigation.navigate('LiveLeaderboard', { tournamentId })}
           >
             <View style={{flexDirection: 'row', alignItems: 'center', gap: 8}}>
-              <CustomIcon name="bar-chart" type="ionicon" size={20} color="#6366F1" />
+              <CustomIcon name="bar-chart" type="ionicon" size={20} color="COLORS.primary" />
               <Text style={styles.leaderboardButtonText}>View Leaderboard</Text>
             </View>
           </TouchableOpacity>

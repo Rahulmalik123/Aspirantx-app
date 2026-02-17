@@ -13,6 +13,7 @@ import CustomIcon from '../../components/CustomIcon';
 import Header from '../../components/common/Header';
 import apiClient from '../../api/client';
 import { ENDPOINTS } from '../../api/endpoints';
+import { COLORS } from '../../constants/colors';
 
 interface Question {
   _id: string;
@@ -96,7 +97,7 @@ const BookmarkedQuestionsScreen = () => {
           <Text style={styles.subjectText}>{item.subject}</Text>
         </View>
         <TouchableOpacity onPress={() => removeBookmark(item._id)} style={styles.removeButton}>
-          <CustomIcon name="bookmark" size={24} color="#6366F1" type="material-community" />
+          <CustomIcon name="bookmark" size={24} color="COLORS.primary" type="material-community" />
         </TouchableOpacity>
       </View>
 
@@ -147,7 +148,7 @@ const BookmarkedQuestionsScreen = () => {
   if (loading) {
     return (
       <View style={styles.centerContainer}>
-        <ActivityIndicator size="large" color="#6366F1" />
+        <ActivityIndicator size="large" color="COLORS.primary" />
         <Text style={styles.loadingText}>Loading bookmarks...</Text>
       </View>
     );
@@ -205,7 +206,7 @@ const BookmarkedQuestionsScreen = () => {
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#6366F1']} />
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['COLORS.primary']} />
           }
         />
       ) : (
@@ -259,7 +260,7 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
   },
   countBadge: {
-    backgroundColor: '#6366F1',
+    backgroundColor: 'COLORS.primary',
     color: '#FFFFFF',
     fontSize: 12,
     fontWeight: '700',
@@ -291,7 +292,7 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   activeFilterChip: {
-    backgroundColor: '#6366F1',
+    backgroundColor: 'COLORS.primary',
   },
   filterChipText: {
     fontSize: 14,

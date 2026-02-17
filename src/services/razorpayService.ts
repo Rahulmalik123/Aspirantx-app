@@ -1,4 +1,5 @@
 import { NativeModules } from 'react-native';
+import { COLORS } from '../constants/colors';
 
 interface RazorpayOptions {
   key: string;
@@ -47,7 +48,7 @@ class RazorpayService {
           contact: userPhone,
         },
         theme: {
-          color: '#6366F1',
+          color: 'COLORS.primary',
         },
       };
 
@@ -104,7 +105,7 @@ class RazorpayService {
           email: userEmail,
         },
         theme: {
-          color: '#6366F1',
+          color: 'COLORS.primary',
         },
       };
 

@@ -36,7 +36,7 @@ const AchievementsScreen = () => {
     { id: '4', title: 'Consistent', description: 'Maintain a 7-day streak', icon: 'calendar', unlocked: false, progress: 5, total: 7, color: '#3B82F6' },
     { id: '5', title: 'Century', description: 'Solve 100 questions', icon: 'checkmark-circle', unlocked: false, progress: 67, total: 100, color: '#9C27B0' },
     { id: '6', title: 'Master', description: 'Score above 90% in 5 subjects', icon: 'school', unlocked: false, progress: 2, total: 5, color: '#EC4899' },
-    { id: '7', title: 'Night Owl', description: 'Complete a quiz after midnight', icon: 'moon', unlocked: true, unlockedAt: '2024-01-19', color: '#6366F1' },
+    { id: '7', title: 'Night Owl', description: 'Complete a quiz after midnight', icon: 'moon', unlocked: true, unlockedAt: '2024-01-19', color: 'COLORS.primary' },
     { id: '8', title: 'Early Bird', description: 'Complete a quiz before 6 AM', icon: 'sunny', unlocked: false, progress: 0, total: 1, color: '#F97316' },
     { id: '9', title: 'Social Butterfly', description: 'Refer 5 friends', icon: 'people', unlocked: false, progress: 2, total: 5, color: '#14B8A6' },
     { id: '10', title: 'Champion', description: 'Rank in top 10', icon: 'trophy', unlocked: false, progress: 0, total: 1, color: '#FFD700' },

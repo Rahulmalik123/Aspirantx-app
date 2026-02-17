@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import CustomIcon from '../../components/CustomIcon';
 import contentService, {Content} from '../../api/services/contentService';
+import { COLORS } from '../../constants/colors';
 
 const MyUploadsScreen = ({navigation}: any) => {
   const [contents, setContents] = useState<Content[]>([]);
@@ -124,7 +125,7 @@ const MyUploadsScreen = ({navigation}: any) => {
             <CustomIcon
               name="download"
               size={14}
-              color="#6366F1"
+              color="COLORS.primary"
               type="material-community"
             />
             <Text style={styles.statText}>{item.totalSales || item.purchaseCount || 0}</Text>
@@ -160,7 +161,7 @@ const MyUploadsScreen = ({navigation}: any) => {
             <TouchableOpacity
               style={styles.editButton}
               onPress={() => handleEditContent(item._id)}>
-              <CustomIcon name="pencil" size={16} color="#6366F1" type="material-community" />
+              <CustomIcon name="pencil" size={16} color="COLORS.primary" type="material-community" />
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.deleteButton}
@@ -183,7 +184,7 @@ const MyUploadsScreen = ({navigation}: any) => {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#6366F1" />
+        <ActivityIndicator size="large" color="COLORS.primary" />
       </View>
     );
   }
@@ -209,7 +210,7 @@ const MyUploadsScreen = ({navigation}: any) => {
           <CustomIcon
             name="plus"
             size={24}
-            color="#6366F1"
+            color="COLORS.primary"
             type="material-community"
           />
         </TouchableOpacity>
@@ -221,7 +222,7 @@ const MyUploadsScreen = ({navigation}: any) => {
           <CustomIcon
             name="package-variant"
             size={24}
-            color="#6366F1"
+            color="COLORS.primary"
             type="material-community"
           />
           <Text style={styles.summaryValue}>{contents.length}</Text>
@@ -295,7 +296,7 @@ const MyUploadsScreen = ({navigation}: any) => {
             <RefreshControl
               refreshing={refreshing}
               onRefresh={onRefresh}
-              colors={['#6366F1']}
+              colors={['COLORS.primary']}
             />
           }
         />
@@ -455,7 +456,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   viewButton: {
-    backgroundColor: '#6366F1',
+    backgroundColor: 'COLORS.primary',
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 8,
@@ -491,7 +492,7 @@ const styles = StyleSheet.create({
   },
   uploadCtaButton: {
     flexDirection: 'row',
-    backgroundColor: '#6366F1',
+    backgroundColor: 'COLORS.primary',
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 12,

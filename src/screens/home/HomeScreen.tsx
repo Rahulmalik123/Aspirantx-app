@@ -91,7 +91,7 @@ const HomeScreen = () => {
 
   // Category data
   const categories = [
-    { id: 1, name: 'Daily Practice', icon: 'book-outline', color: '#6366F1', screen: 'DailyPractice', params: undefined },
+    { id: 1, name: 'Daily Practice', icon: 'book-outline', color: 'COLORS.primary', screen: 'DailyPractice', params: undefined },
     { id: 2, name: 'Mock Tests', icon: 'create-outline', color: '#8B5CF6', screen: 'ExamCategories', params: undefined },
     // PYQ/Previous Papers - Temporarily Commented Out
     // { id: 3, name: 'Previous Papers', icon: 'document-text-outline', color: '#EC4899', screen: 'PYQScreen', params: undefined },
@@ -1184,7 +1184,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   recentTestScoreFraction: {
-    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+    backgroundColor: COLORS.textTertiary ,
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 8,
@@ -1199,7 +1199,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 3,
     marginTop: 6,
-    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+    backgroundColor: COLORS.textTertiary,
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 6,

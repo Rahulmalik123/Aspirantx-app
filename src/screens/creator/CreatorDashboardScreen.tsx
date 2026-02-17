@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import CustomIcon from '../../components/CustomIcon';
 import creatorService from '../../api/services/creatorService';
+import { COLORS } from '../../constants/colors';
 
 const CreatorDashboardScreen = ({navigation}: any) => {
   const [dashboard, setDashboard] = useState<any>(null);
@@ -61,7 +62,7 @@ const CreatorDashboardScreen = ({navigation}: any) => {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#6366F1" />
+        <ActivityIndicator size="large" color="COLORS.primary" />
       </View>
     );
   }
@@ -187,7 +188,7 @@ const CreatorDashboardScreen = ({navigation}: any) => {
           <TouchableOpacity
             style={styles.actionButton}
             onPress={() => navigation.navigate('UploadContent')}>
-            <CustomIcon name="upload" size={22} color="#6366F1" type="material-community" />
+            <CustomIcon name="upload" size={22} color="COLORS.primary" type="material-community" />
             <Text style={styles.actionText}>Upload Content</Text>
           </TouchableOpacity>
           <TouchableOpacity
@@ -372,7 +373,7 @@ const styles = StyleSheet.create({
   },
   payoutButton: {
     flexDirection: 'row',
-    backgroundColor: '#6366F1',
+    backgroundColor: 'COLORS.primary',
     borderRadius: 10,
     paddingVertical: 12,
     justifyContent: 'center',
@@ -442,7 +443,7 @@ const styles = StyleSheet.create({
   },
   viewAllText: {
     fontSize: 13,
-    color: '#6366F1',
+    color: 'COLORS.primary',
     fontWeight: '600',
   },
   saleCard: {
