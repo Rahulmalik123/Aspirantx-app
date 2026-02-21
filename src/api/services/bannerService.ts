@@ -28,7 +28,7 @@ class BannerService {
    */
   async getActiveBanners(): Promise<Banner[]> {
     try {
-      const response = await apiClient.get<BannerResponse>('/banners/active');
+      const response = await apiClient.get<BannerResponse>('/api/v1/banners/active');
       return response.data.data || [];
     } catch (error) {
       console.error('❌ [BannerService] Failed to fetch active banners:', error);
@@ -42,7 +42,7 @@ class BannerService {
    */
   async getBannerById(bannerId: string): Promise<Banner | null> {
     try {
-      const response = await apiClient.get<{ success: boolean; data: Banner }>(`/banners/${bannerId}`);
+      const response = await apiClient.get<{ success: boolean; data: Banner }>(`/api/v1/banners/${bannerId}`);
       return response.data.data;
     } catch (error) {
       console.error('❌ [BannerService] Failed to fetch banner:', error);
@@ -55,7 +55,7 @@ class BannerService {
    */
   async trackBannerClick(bannerId: string): Promise<void> {
     try {
-      await apiClient.post(`/banners/${bannerId}/track`, { action: 'click' });
+      await apiClient.post(`/api/v1/banners/${bannerId}/track`, { action: 'click' });
     } catch (error) {
       console.error('❌ [BannerService] Failed to track banner click:', error);
     }

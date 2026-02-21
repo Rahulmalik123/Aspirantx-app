@@ -1,6 +1,69 @@
 import { Platform, Alert, Linking } from 'react-native';
 import { PERMISSIONS, request, check, RESULTS, requestMultiple } from 'react-native-permissions';
 
+// Show rationale dialog before requesting — returns true if user wants to proceed
+const showRationale = (title: string, message: string): Promise<boolean> =>
+  new Promise(resolve =>
+    Alert.alert(title, message, [
+      { text: 'Not Now', style: 'cancel', onPress: () => resolve(false) },
+      { text: 'Allow', onPress: () => resolve(true) },
+    ])
+  );
+
+// Show settings prompt when permission is permanently blocked
+const showSettingsPrompt = (title: string, message: string) =>
+  Alert.alert(title, message, [
+    { text: 'Cancel', style: 'cancel' },
+    { text: 'Open Settings', onPress: () => Linking.openSettings() },
+  ]);
+
+export const requestNotificationPermission = async (): Promise<boolean> => {
+  try {
+    // Android < 13 doesn't need explicit notification permission
+    // (POST_NOTIFICATIONS constant may not exist on older OS versions)
+    if (Platform.OS === 'android' && Platform.Version < 33) {
+      return true;
+    }
+
+    const permission =
+      Platform.OS === 'ios'
+        ? PERMISSIONS.IOS.NOTIFICATIONS
+        : PERMISSIONS.ANDROID.POST_NOTIFICATIONS;
+
+    if (!permission) {
+      return true;
+    }
+
+    const status = await check(permission);
+
+    if (status === RESULTS.GRANTED) {
+      return true;
+    }
+
+    if (status === RESULTS.BLOCKED) {
+      showSettingsPrompt(
+        'Notifications Blocked',
+        'You have blocked notifications. Please enable them in app settings to receive battle challenges and results.',
+      );
+      return false;
+    }
+
+    // DENIED or UNDETERMINED — show rationale first
+    const proceed = await showRationale(
+      'Stay in the Game! 🔔',
+      'Allow notifications to get alerts when:\n• Someone challenges you to a battle\n• Your battle result is ready\n• You receive a new achievement',
+    );
+
+    if (!proceed) return false;
+
+    const result = await request(permission);
+    return result === RESULTS.GRANTED;
+  } catch (err) {
+    console.error('Error requesting notification permission:', err);
+    return false;
+  }
+};
+
 export const requestStoragePermissions = async (): Promise<boolean> => {
   if (Platform.OS !== 'android') {
     return true;

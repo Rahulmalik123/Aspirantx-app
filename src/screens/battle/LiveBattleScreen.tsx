@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -6,204 +6,299 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   ScrollView,
-  Alert,
 } from 'react-native';
 import { RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation/MainNavigator';
-import { battleService } from '../../api/services';
-
-type LiveBattleScreenRouteProp = RouteProp<RootStackParamList, 'LiveBattle'>;
-type LiveBattleScreenNavigationProp = NativeStackNavigationProp<
-  RootStackParamList,
-  'LiveBattle'
->;
+import { COLORS } from '../../constants/colors';
+import battleService, { Battle, BattleQuestion } from '../../api/services/battleService';
+import CustomIcon from '../../components/CustomIcon';
 
 type Props = {
-  route: LiveBattleScreenRouteProp;
-  navigation: LiveBattleScreenNavigationProp;
+  route: RouteProp<RootStackParamList, 'LiveBattle'>;
+  navigation: NativeStackNavigationProp<RootStackParamList, 'LiveBattle'>;
 };
 
-interface Question {
-  _id: string;
-  questionText: string;
-  options: string[];
-  correctAnswer: number;
-}
-
-interface Battle {
-  _id: string;
-  participants: {
-    userId: string;
-    name: string;
-    score: number;
-    answeredQuestions: number;
-  }[];
-  questions: Question[];
-  status: 'waiting' | 'active' | 'completed';
-  startTime?: string;
-  endTime?: string;
-}
+const QUESTION_TIME = 30;
+const OPTION_LABELS = ['A', 'B', 'C', 'D'];
 
 const LiveBattleScreen: React.FC<Props> = ({ route, navigation }) => {
   const { battleId } = route.params;
+
   const [battle, setBattle] = useState<Battle | null>(null);
   const [loading, setLoading] = useState(true);
-  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
-  const [timeRemaining, setTimeRemaining] = useState(30);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [selectedOption, setSelectedOption] = useState<number | null>(null);
+  const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
+  const [correctAnswer, setCorrectAnswer] = useState<number | null>(null);
+  const [timeLeft, setTimeLeft] = useState(QUESTION_TIME);
+  const [score, setScore] = useState(0);
+  const [submitting, setSubmitting] = useState(false);
+
+  const questionStartTime = useRef<number>(Date.now());
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
-    fetchBattle();
-    const interval = setInterval(fetchBattle, 5000); // Refresh battle state every 5 seconds
-    return () => clearInterval(interval);
+    loadBattle();
+    pollRef.current = setInterval(loadBattle, 6000);
+    return () => {
+      if (pollRef.current) clearInterval(pollRef.current);
+    };
   }, [battleId]);
 
   useEffect(() => {
-    if (battle?.status === 'active' && timeRemaining > 0) {
-      const timer = setTimeout(() => {
-        setTimeRemaining(timeRemaining - 1);
-      }, 1000);
-      return () => clearTimeout(timer);
-    } else if (timeRemaining === 0) {
-      handleNextQuestion();
-    }
-  }, [timeRemaining, battle?.status]);
+    if (!battle || battle.status !== 'ongoing') return;
+    setTimeLeft(QUESTION_TIME);
+    questionStartTime.current = Date.now();
 
-  const fetchBattle = async () => {
+    timerRef.current = setInterval(() => {
+      setTimeLeft((t) => {
+        if (t <= 1) {
+          clearInterval(timerRef.current!);
+          if (selectedOption === null) handleTimeout();
+          return 0;
+        }
+        return t - 1;
+      });
+    }, 1000);
+
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
+  }, [currentIndex, battle?.status]);
+
+  const loadBattle = async () => {
     try {
-      const response = await battleService.getBattle(battleId);
-      setBattle(response);
-    } catch (error) {
-      console.error('Error fetching battle:', error);
-      Alert.alert('Error', 'Failed to load battle details');
+      const data = await battleService.getBattle(battleId);
+      setBattle(data);
+      if (data.status === 'completed') {
+        navigation.replace('BattleResult', { battleId });
+      }
+    } catch {
+      // silent
     } finally {
       setLoading(false);
     }
   };
 
-  const handleAnswerSelect = async (answerIndex: number) => {
-    if (selectedAnswer !== null) return;
-    
-    setSelectedAnswer(answerIndex);
-    
+  const handleSelect = async (optionIndex: number) => {
+    if (selectedOption !== null || submitting) return;
+    if (timerRef.current) clearInterval(timerRef.current);
+
+    setSelectedOption(optionIndex);
+    setSubmitting(true);
+
+    const question = battle!.questions[currentIndex] as BattleQuestion;
+    const timeTaken = Math.round((Date.now() - questionStartTime.current) / 1000);
+
     try {
-      await battleService.submitAnswer(battleId, {
-        questionId: battle?.questions[currentQuestionIndex]._id,
-        answer: answerIndex,
+      const result = await battleService.submitAnswer(battleId, {
+        questionId: question._id,
+        selectedOption: optionIndex,
+        timeTaken,
       });
-    } catch (error) {
-      console.error('Error submitting answer:', error);
+      setIsCorrect(result.isCorrect);
+      setCorrectAnswer(result.correctAnswer);
+      if (result.isCorrect) setScore((s) => s + 1);
+    } catch {
+      // silent
+    } finally {
+      setSubmitting(false);
     }
   };
 
-  const handleNextQuestion = () => {
-    if (battle && currentQuestionIndex < battle.questions.length - 1) {
-      setCurrentQuestionIndex(currentQuestionIndex + 1);
-      setSelectedAnswer(null);
-      setTimeRemaining(30);
+  const handleTimeout = async () => {
+    const question = battle!.questions[currentIndex] as BattleQuestion;
+    try {
+      await battleService.submitAnswer(battleId, {
+        questionId: question._id,
+        selectedOption: -1,
+        timeTaken: QUESTION_TIME,
+      });
+    } catch {
+      // silent
+    }
+    goNext();
+  };
+
+  const goNext = () => {
+    if (!battle) return;
+    const total = battle.questions.length;
+    if (currentIndex < total - 1) {
+      setCurrentIndex((i) => i + 1);
+      setSelectedOption(null);
+      setIsCorrect(null);
+      setCorrectAnswer(null);
     } else {
-      // Battle completed
       navigation.replace('BattleResult', { battleId });
     }
   };
 
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#FF6B6B" />
-        <Text style={styles.loadingText}>Loading Battle...</Text>
+      <View style={styles.center}>
+        <ActivityIndicator size="large" color={COLORS.primary} />
+        <Text style={styles.loadingText}>Loading battle...</Text>
       </View>
     );
   }
 
   if (!battle) {
     return (
-      <View style={styles.errorContainer}>
+      <View style={styles.center}>
         <Text style={styles.errorText}>Battle not found</Text>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginTop: 8 }}>
+          <Text style={{ fontSize: 14, color: COLORS.primary, fontWeight: '600' }}>Go back</Text>
+        </TouchableOpacity>
       </View>
     );
   }
 
-  const currentQuestion = battle.questions[currentQuestionIndex];
+  // Waiting room — creator waits for opponent
+  if (battle.status === 'waiting') {
+    return (
+      <View style={styles.waitingContainer}>
+        <View style={styles.waitingCard}>
+          <ActivityIndicator size="large" color={COLORS.primary} />
+          <Text style={styles.waitingTitle}>Waiting for opponent...</Text>
+          <Text style={styles.waitingSubtitle}>
+            Share the invite code with your opponent to start the battle
+          </Text>
+          {battle.inviteCode && (
+            <View style={styles.inviteCodeBox}>
+              <Text style={styles.inviteCodeLabel}>Invite Code</Text>
+              <Text style={styles.inviteCodeText}>{battle.inviteCode}</Text>
+            </View>
+          )}
+          <View style={styles.waitingInfo}>
+            <View style={styles.waitingInfoRow}>
+              <CustomIcon name="book-outline" size={14} color="#6B7280" />
+              <Text style={styles.waitingInfoText}>
+                {battle.exam?.name ?? 'Battle'} · {battle.subject?.name ?? ''}
+              </Text>
+            </View>
+            <View style={styles.waitingInfoRow}>
+              <CustomIcon name="cash-outline" size={14} color="#F59E0B" />
+              <Text style={styles.waitingInfoText}>
+                Prize: {battle.prizePool} coins
+              </Text>
+            </View>
+          </View>
+          <TouchableOpacity
+            style={styles.cancelWaitBtn}
+            onPress={() => navigation.replace('BattleList')}
+          >
+            <Text style={styles.cancelWaitText}>Cancel &amp; Go Back</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
+  }
+
+  const questions = battle.questions as BattleQuestion[];
+  const total = questions.length;
+  const question = questions[currentIndex];
+  const progress = (currentIndex + 1) / total;
+  const timerColor = timeLeft <= 10 ? '#EF4444' : COLORS.primary;
+  const timerBg = timeLeft <= 10 ? '#FEF2F2' : COLORS.primary + '10';
+
+  const getOptionStyle = (i: number) => {
+    if (selectedOption === null) return styles.option;
+    if (i === correctAnswer) return [styles.option, styles.optionCorrect];
+    if (i === selectedOption && !isCorrect) return [styles.option, styles.optionWrong];
+    return [styles.option, styles.optionDimmed];
+  };
+
+  const getOptionLabelStyle = (i: number) => {
+    if (selectedOption === null) return styles.optionLabel;
+    if (i === correctAnswer) return [styles.optionLabel, styles.optionLabelCorrect];
+    if (i === selectedOption && !isCorrect) return [styles.optionLabel, styles.optionLabelWrong];
+    return styles.optionLabel;
+  };
 
   return (
     <View style={styles.container}>
-      {/* Header with scores */}
-      <View style={styles.header}>
-        <View style={styles.participantsContainer}>
-          {battle.participants.map((participant, index) => (
-            <View key={participant.userId} style={styles.participantCard}>
-              <Text style={styles.participantName}>{participant.name}</Text>
-              <Text style={styles.participantScore}>{participant.score} pts</Text>
-            </View>
+      {/* Top bar */}
+      <View style={styles.topBar}>
+        <View style={styles.playerCard}>
+          <Text style={styles.playerName} numberOfLines={1}>
+            {battle.creator?.name ?? 'You'}
+          </Text>
+          <Text style={styles.playerScore}>{score}</Text>
+        </View>
+
+        <View style={[styles.timerBox, { backgroundColor: timerBg }]}>
+          <Text style={[styles.timerText, { color: timerColor }]}>{timeLeft}</Text>
+          <Text style={[styles.timerSub, { color: timerColor }]}>sec</Text>
+        </View>
+
+        <View style={[styles.playerCard, styles.playerCardRight]}>
+          <Text style={styles.playerName} numberOfLines={1}>
+            {battle.opponent?.name ?? 'Opponent'}
+          </Text>
+          <Text style={styles.playerScore}>—</Text>
+        </View>
+      </View>
+
+      {/* Progress */}
+      <View style={styles.progressWrapper}>
+        <View style={styles.progressTrack}>
+          <View style={[styles.progressFill, { width: `${progress * 100}%` as any }]} />
+        </View>
+        <Text style={styles.progressLabel}>{currentIndex + 1}/{total}</Text>
+      </View>
+
+      {/* Question + Options */}
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.questionCard}>
+          <Text style={styles.questionNum}>Question {currentIndex + 1}</Text>
+          <Text style={styles.questionText}>{question?.questionText}</Text>
+        </View>
+
+        <View style={styles.optionsWrapper}>
+          {(question?.options ?? []).map((opt, i) => (
+            <TouchableOpacity
+              key={i}
+              style={getOptionStyle(i)}
+              onPress={() => handleSelect(i)}
+              disabled={selectedOption !== null || submitting}
+              activeOpacity={0.75}
+            >
+              <View style={getOptionLabelStyle(i)}>
+                <Text style={styles.optionLabelText}>{OPTION_LABELS[i]}</Text>
+              </View>
+              <Text style={styles.optionText}>
+                {typeof opt === 'string' ? opt : (opt as any).text}
+              </Text>
+              {submitting && selectedOption === i && (
+                <ActivityIndicator size="small" color={COLORS.primary} style={{ marginLeft: 8 }} />
+              )}
+            </TouchableOpacity>
           ))}
         </View>
-        <View style={styles.timerContainer}>
-          <Text style={styles.timerText}>{timeRemaining}s</Text>
-        </View>
-      </View>
 
-      {/* Question Progress */}
-      <View style={styles.progressContainer}>
-        <Text style={styles.progressText}>
-          Question {currentQuestionIndex + 1} of {battle.questions.length}
-        </Text>
-        <View style={styles.progressBar}>
-          <View 
-            style={[
-              styles.progressFill, 
-              { width: `${((currentQuestionIndex + 1) / battle.questions.length) * 100}%` }
-            ]} 
-          />
-        </View>
-      </View>
-
-      {/* Question */}
-      <ScrollView style={styles.content}>
-        <View style={styles.questionContainer}>
-          <Text style={styles.questionText}>{currentQuestion.questionText}</Text>
-        </View>
-
-        {/* Options */}
-        <View style={styles.optionsContainer}>
-          {currentQuestion.options.map((option, index) => {
-            const isSelected = selectedAnswer === index;
-            const isCorrect = index === currentQuestion.correctAnswer;
-            const showResult = selectedAnswer !== null;
-
-            return (
-              <TouchableOpacity
-                key={index}
-                style={[
-                  styles.optionButton,
-                  isSelected && styles.selectedOption,
-                  showResult && isCorrect && styles.correctOption,
-                  showResult && isSelected && !isCorrect && styles.wrongOption,
-                ]}
-                onPress={() => handleAnswerSelect(index)}
-                disabled={selectedAnswer !== null}
-              >
-                <Text style={[
-                  styles.optionText,
-                  isSelected && styles.selectedOptionText,
-                ]}>
-                  {option}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
-        </View>
-
-        {selectedAnswer !== null && (
-          <TouchableOpacity 
-            style={styles.nextButton}
-            onPress={handleNextQuestion}
-          >
-            <Text style={styles.nextButtonText}>
-              {currentQuestionIndex < battle.questions.length - 1 ? 'Next Question' : 'View Results'}
-            </Text>
-          </TouchableOpacity>
+        {/* Feedback + Next */}
+        {selectedOption !== null && (
+          <View style={styles.feedbackRow}>
+            <View style={[styles.feedbackBadge, isCorrect ? styles.feedbackCorrect : styles.feedbackWrong]}>
+              <CustomIcon
+                name={isCorrect ? 'checkmark-circle' : 'close-circle'}
+                size={16}
+                color={isCorrect ? '#065F46' : '#991B1B'}
+              />
+              <Text style={styles.feedbackText}>{isCorrect ? 'Correct' : 'Wrong'}</Text>
+            </View>
+            <TouchableOpacity style={styles.nextBtn} onPress={goNext}>
+              <Text style={styles.nextBtnText}>
+                {currentIndex < total - 1 ? 'Next →' : 'Finish'}
+              </Text>
+            </TouchableOpacity>
+          </View>
         )}
       </ScrollView>
     </View>
@@ -211,152 +306,172 @@ const LiveBattleScreen: React.FC<Props> = ({ route, navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  container: {
+  container: { flex: 1, backgroundColor: '#F9FAFB' },
+  center: { flex: 1, justifyContent: 'center', alignItems: 'center', gap: 12 },
+  loadingText: { fontSize: 14, color: '#6B7280' },
+  errorText: { fontSize: 16, color: '#374151', fontWeight: '600' },
+
+  // Waiting room
+  waitingContainer: {
     flex: 1,
-    backgroundColor: '#F5F5F5',
-  },
-  loadingContainer: {
-    flex: 1,
+    backgroundColor: '#F9FAFB',
     justifyContent: 'center',
+    paddingHorizontal: 24,
+  },
+  waitingCard: {
+    backgroundColor: '#fff',
+    borderRadius: 20,
+    padding: 28,
     alignItems: 'center',
-    backgroundColor: '#F5F5F5',
-  },
-  loadingText: {
-    marginTop: 16,
-    fontSize: 16,
-    color: '#666',
-  },
-  errorContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  errorText: {
-    fontSize: 18,
-    color: '#999',
-  },
-  header: {
-    backgroundColor: '#FFFFFF',
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E0E0E0',
-  },
-  participantsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginBottom: 12,
-  },
-  participantCard: {
-    alignItems: 'center',
-    padding: 12,
-    backgroundColor: '#F8F8F8',
-    borderRadius: 8,
-    flex: 1,
-    marginHorizontal: 4,
-  },
-  participantName: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 4,
-  },
-  participantScore: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#FF6B6B',
-  },
-  timerContainer: {
-    alignItems: 'center',
-    padding: 8,
-    backgroundColor: '#FF6B6B',
-    borderRadius: 8,
-  },
-  timerText: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-  },
-  progressContainer: {
-    padding: 16,
-    backgroundColor: '#FFFFFF',
-  },
-  progressText: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 8,
-  },
-  progressBar: {
-    height: 8,
-    backgroundColor: '#E0E0E0',
-    borderRadius: 4,
-    overflow: 'hidden',
-  },
-  progressFill: {
-    height: '100%',
-    backgroundColor: '#FF6B6B',
-  },
-  content: {
-    flex: 1,
-  },
-  questionContainer: {
-    backgroundColor: '#FFFFFF',
-    padding: 20,
-    margin: 16,
-    borderRadius: 12,
+    gap: 16,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 4,
   },
-  questionText: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#333',
-    lineHeight: 26,
-  },
-  optionsContainer: {
-    padding: 16,
-  },
-  optionButton: {
-    backgroundColor: '#FFFFFF',
-    padding: 16,
-    borderRadius: 12,
-    marginBottom: 12,
+  waitingTitle: { fontSize: 20, fontWeight: '700', color: '#111827' },
+  waitingSubtitle: { fontSize: 13, color: '#6B7280', textAlign: 'center', lineHeight: 18 },
+  inviteCodeBox: {
+    backgroundColor: '#F3F4F6',
+    borderRadius: 14,
+    paddingVertical: 14,
+    paddingHorizontal: 28,
+    alignItems: 'center',
     borderWidth: 2,
-    borderColor: '#E0E0E0',
+    borderColor: '#E5E7EB',
+    borderStyle: 'dashed',
+    width: '100%',
   },
-  selectedOption: {
-    borderColor: '#FF6B6B',
-    backgroundColor: '#FFF5F5',
+  inviteCodeLabel: { fontSize: 11, color: '#9CA3AF', fontWeight: '600', marginBottom: 4 },
+  inviteCodeText: { fontSize: 28, fontWeight: '800', color: '#111827', letterSpacing: 6 },
+  waitingInfo: { width: '100%', gap: 8 },
+  waitingInfoRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  waitingInfoText: { fontSize: 13, color: '#6B7280' },
+  cancelWaitBtn: {
+    marginTop: 4,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
   },
-  correctOption: {
-    borderColor: '#4CAF50',
-    backgroundColor: '#F1F8F4',
+  cancelWaitText: { fontSize: 13, color: '#9CA3AF', fontWeight: '600' },
+
+  topBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F3F4F6',
   },
-  wrongOption: {
-    borderColor: '#F44336',
-    backgroundColor: '#FFEBEE',
+  playerCard: { flex: 1, gap: 2 },
+  playerCardRight: { alignItems: 'flex-end' },
+  playerName: { fontSize: 13, fontWeight: '600', color: '#6B7280' },
+  playerScore: { fontSize: 24, fontWeight: '800', color: COLORS.primary },
+
+  timerBox: {
+    width: 54,
+    height: 54,
+    borderRadius: 27,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginHorizontal: 12,
   },
-  optionText: {
-    fontSize: 16,
-    color: '#333',
+  timerText: { fontSize: 20, fontWeight: '800', lineHeight: 22 },
+  timerSub: { fontSize: 10, fontWeight: '600', lineHeight: 12 },
+
+  progressWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    backgroundColor: '#fff',
+    gap: 10,
   },
-  selectedOptionText: {
-    fontWeight: '600',
+  progressTrack: {
+    flex: 1,
+    height: 4,
+    backgroundColor: '#E5E7EB',
+    borderRadius: 2,
+    overflow: 'hidden',
   },
-  nextButton: {
-    backgroundColor: '#FF6B6B',
-    padding: 16,
+  progressFill: { height: '100%', backgroundColor: COLORS.primary, borderRadius: 2 },
+  progressLabel: { fontSize: 12, fontWeight: '600', color: '#6B7280', width: 36, textAlign: 'right' },
+
+  scroll: { flex: 1 },
+  scrollContent: { padding: 16, gap: 12, paddingBottom: 32 },
+
+  questionCard: {
+    backgroundColor: '#fff',
+    borderRadius: 14,
+    padding: 18,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 3,
+    elevation: 2,
+    gap: 8,
+  },
+  questionNum: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: COLORS.primary,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  questionText: { fontSize: 16, fontWeight: '600', color: '#111827', lineHeight: 24 },
+
+  optionsWrapper: { gap: 10 },
+  option: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fff',
     borderRadius: 12,
-    margin: 16,
+    padding: 14,
+    borderWidth: 1.5,
+    borderColor: '#E5E7EB',
+    gap: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.03,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  optionCorrect: { borderColor: '#10B981', backgroundColor: '#F0FDF4' },
+  optionWrong: { borderColor: '#EF4444', backgroundColor: '#FEF2F2' },
+  optionDimmed: { opacity: 0.45 },
+
+  optionLabel: {
+    width: 30,
+    height: 30,
+    borderRadius: 8,
+    backgroundColor: '#F3F4F6',
+    justifyContent: 'center',
     alignItems: 'center',
   },
-  nextButtonText: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
+  optionLabelCorrect: { backgroundColor: '#10B981' },
+  optionLabelWrong: { backgroundColor: '#EF4444' },
+  optionLabelText: { fontSize: 13, fontWeight: '700', color: '#6B7280' },
+  optionText: { flex: 1, fontSize: 14, fontWeight: '500', color: '#111827', lineHeight: 20 },
+
+  feedbackRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 4,
   },
+  feedbackBadge: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20 },
+  feedbackCorrect: { backgroundColor: '#D1FAE5' },
+  feedbackWrong: { backgroundColor: '#FEE2E2' },
+  feedbackText: { fontSize: 13, fontWeight: '700', color: '#111827' },
+
+  nextBtn: {
+    backgroundColor: COLORS.primary,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 20,
+  },
+  nextBtnText: { fontSize: 14, fontWeight: '700', color: '#fff' },
 });
 
 export default LiveBattleScreen;

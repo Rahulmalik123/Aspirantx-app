@@ -83,4 +83,14 @@ export const socialService = {
   unfollowUser: async (targetUserId: string): Promise<any> => {
     return apiClient.delete(`/api/v1/social/follow/${targetUserId}`);
   },
+
+  // Get following list of a user
+  getFollowing: async (userId: string, page = 1, limit = 50): Promise<any> => {
+    return apiClient.get(`/api/v1/social/users/${userId}/following?page=${page}&limit=${limit}`);
+  },
+
+  // Get followers list of a user
+  getFollowers: async (userId: string, page = 1, limit = 50): Promise<any> => {
+    return apiClient.get(`/api/v1/social/users/${userId}/followers?page=${page}&limit=${limit}`);
+  },
 };

@@ -96,6 +96,7 @@ const HomeScreen = () => {
     // PYQ/Previous Papers - Temporarily Commented Out
     // { id: 3, name: 'Previous Papers', icon: 'document-text-outline', color: '#EC4899', screen: 'PYQScreen', params: undefined },
     { id: 4, name: 'Tournaments', icon: 'trophy-outline', color: '#F59E0B', screen: 'TournamentList', params: undefined },
+    { id: 7, name: 'Battles', icon: 'flash-outline', color: '#EF4444', screen: 'BattleList', params: undefined },
     { id: 5, name: 'Analytics', icon: 'stats-chart-outline', color: '#10B981', screen: 'Analytics', params: undefined },
     { id: 6, name: 'Saved Content', icon: 'bookmark-outline', color: '#06B6D4', screen: 'SavedContent', params: undefined },
   ];
@@ -163,15 +164,9 @@ const HomeScreen = () => {
   const fetchExams = async () => {
     setLoadingExams(true);
     try {
-      const categories = await examService.getCategories();
-      const allExams: Exam[] = [];
-      
-      for (const category of categories.data || []) {
-        const categoryExams = await examService.getExamsByCategory(category._id);
-        allExams.push(...(categoryExams.data || []));
-      }
-      
-      setExams(allExams);
+      const response: any = await examService.getExams();
+      const allExams: Exam[] = response?.data?.data ?? response?.data ?? response ?? [];
+      setExams(Array.isArray(allExams) ? allExams : []);
     } catch (error) {
       console.error('Failed to fetch exams:', error);
     } finally {

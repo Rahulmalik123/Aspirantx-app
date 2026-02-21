@@ -89,14 +89,16 @@ export const ENDPOINTS = {
   MY_TOURNAMENTS: '/api/v1/tournaments/my-tournaments',
   
   // Battles
-  BATTLE_LOBBY: '/api/v1/battles/lobby',
-  FIND_OPPONENT: '/api/v1/battles/find',
+  AVAILABLE_BATTLES: '/api/v1/battles/available',
   CREATE_BATTLE: '/api/v1/battles/create',
-  JOIN_BATTLE: (id: string) => `/api/v1/battles/${id}/join`,
+  JOIN_BATTLE: (id: string) => `/api/v1/battles/join/${id}`,
+  JOIN_BATTLE_BY_CODE: (code: string) => `/api/v1/battles/join-by-code/${code}`,
   BATTLE_DETAILS: (id: string) => `/api/v1/battles/${id}`,
   SUBMIT_BATTLE_ANSWER: (id: string) => `/api/v1/battles/${id}/answer`,
-  BATTLE_RESULT: (id: string) => `/api/v1/battles/${id}/result`,
-  BATTLE_HISTORY: '/api/v1/battles/history',
+  BATTLE_RESULT: (id: string) => `/api/v1/battles/results/${id}`,
+  MY_BATTLES: '/api/v1/battles/my-battles',
+  PENDING_CHALLENGES: '/api/v1/battles/pending-challenges',
+  DECLINE_CHALLENGE: (id: string) => `/api/v1/battles/${id}/decline`,
   
   // Wallet
   WALLET: '/api/v1/wallet',

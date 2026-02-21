@@ -1,4 +1,4 @@
-import apiClient from '../client';
+import { api } from '../client';
 import { ENDPOINTS } from '../endpoints';
 
 export interface LoginRequest {
@@ -86,14 +86,14 @@ export interface OTPResponse {
 class AuthService {
   async sendOTP(data: SendOTPRequest): Promise<OTPResponse> {
     console.log('🌐 [AuthService] sendOTP called:', ENDPOINTS.SEND_OTP_PHONE, data);
-    const response = await apiClient.post(ENDPOINTS.SEND_OTP_PHONE, data);
+    const response = await api.post<OTPResponse>(ENDPOINTS.SEND_OTP_PHONE, data);
     console.log('🌐 [AuthService] sendOTP response:', response);
     return response;
   }
 
   async verifyOTP(data: VerifyOTPRequest): Promise<AuthResponse> {
     console.log('🌐 [AuthService] verifyOTP called:', ENDPOINTS.VERIFY_OTP_PHONE, data);
-    const response = await apiClient.post(ENDPOINTS.VERIFY_OTP_PHONE, data);
+    const response = await api.post<AuthResponse>(ENDPOINTS.VERIFY_OTP_PHONE, data);
     console.log('🌐 [AuthService] verifyOTP response:', response);
     return response;
   }
@@ -105,51 +105,55 @@ class AuthService {
       type: data.type,
       purpose: data.purpose,
     };
-    const response = await apiClient.post(ENDPOINTS.RESEND_OTP_API, payload);
+    const response = await api.post<OTPResponse>(ENDPOINTS.RESEND_OTP_API, payload);
     console.log('🌐 [AuthService] resendOTP response:', response);
     return response;
   }
 
   async updateProfile(data: UpdateProfileRequest): Promise<{ success: boolean; data: { user: any }; message: string }> {
     console.log('🌐 [AuthService] updateProfile called:', ENDPOINTS.UPDATE_PROFILE, data);
-    const response = await apiClient.put(ENDPOINTS.UPDATE_PROFILE, data);
+    const response = await api.put<{ success: boolean; data: { user: any }; message: string }>(ENDPOINTS.UPDATE_PROFILE, data);
     console.log('🌐 [AuthService] updateProfile response:', response);
     return response;
   }
 
   async completeProfile(data: CompleteProfileRequest): Promise<AuthResponse> {
     console.log('🌐 [AuthService] completeProfile called:', ENDPOINTS.COMPLETE_PROFILE, data);
-    const response = await apiClient.post(ENDPOINTS.COMPLETE_PROFILE, data);
+    const response = await api.post<AuthResponse>(ENDPOINTS.COMPLETE_PROFILE, data);
     console.log('🌐 [AuthService] completeProfile response:', response);
     return response;
   }
 
+  async refreshAuthToken(refreshToken: string): Promise<{ accessToken: string; refreshToken?: string }> {
+    return api.post<{ accessToken: string; refreshToken?: string }>(ENDPOINTS.REFRESH_TOKEN, { refreshToken });
+  }
+
   async login(data: LoginRequest): Promise<AuthResponse> {
     console.log('🌐 [AuthService] login called:', ENDPOINTS.LOGIN);
-    const response = await apiClient.post(ENDPOINTS.LOGIN, data);
+    const response = await api.post<AuthResponse>(ENDPOINTS.LOGIN, data);
     console.log('🌐 [AuthService] login response:', response);
     return response;
   }
 
   async register(data: RegisterRequest): Promise<RegisterResponse> {
-    return apiClient.post(ENDPOINTS.REGISTER, data);
+    return api.post<RegisterResponse>(ENDPOINTS.REGISTER, data);
   }
 
   async forgotPassword(email: string): Promise<{ success: boolean; message: string }> {
-    return apiClient.post(ENDPOINTS.FORGOT_PASSWORD, { email });
+    return api.post<{ success: boolean; message: string }>(ENDPOINTS.FORGOT_PASSWORD, { email });
   }
 
   async resetPassword(email: string, otp: string, newPassword: string): Promise<{ success: boolean; message: string }> {
-    return apiClient.post(ENDPOINTS.RESET_PASSWORD, { email, otp, newPassword });
+    return api.post<{ success: boolean; message: string }>(ENDPOINTS.RESET_PASSWORD, { email, otp, newPassword });
   }
 
   async logout(): Promise<void> {
-    return apiClient.post(ENDPOINTS.LOGOUT);
+    return api.post<void>(ENDPOINTS.LOGOUT);
   }
 
   async getProfile(): Promise<any> {
     console.log('🌐 [AuthService] getProfile called:', ENDPOINTS.PROFILE);
-    const response = await apiClient.get(ENDPOINTS.PROFILE);
+    const response = await api.get(ENDPOINTS.PROFILE);
     console.log('🌐 [AuthService] getProfile response:', response);
     return response;
   }
