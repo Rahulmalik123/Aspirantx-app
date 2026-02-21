@@ -51,6 +51,22 @@
             <action android:name="android.intent.action.MAIN" />
             <category android:name="android.intent.category.LAUNCHER" />
         </intent-filter>
+
+        <!-- Custom scheme: aspirantx://battle/xxx, aspirantx://post/xxx, etc. -->
+        <intent-filter android:label="@string/app_name">
+            <action android:name="android.intent.action.VIEW" />
+            <category android:name="android.intent.category.DEFAULT" />
+            <category android:name="android.intent.category.BROWSABLE" />
+            <data android:scheme="aspirantx" />
+        </intent-filter>
+
+        <!-- App Links: https://aspirantx.com/* (verified via .well-known/assetlinks.json) -->
+        <intent-filter android:autoVerify="true" android:label="@string/app_name">
+            <action android:name="android.intent.action.VIEW" />
+            <category android:name="android.intent.category.DEFAULT" />
+            <category android:name="android.intent.category.BROWSABLE" />
+            <data android:scheme="https" android:host="aspirantx.com" />
+        </intent-filter>
       </activity>
 
       <!-- FCM default notification channel (Android 8+) -->

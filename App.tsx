@@ -8,6 +8,7 @@ import Toast from 'react-native-toast-message';
 
 import store, { AppDispatch, RootState } from './src/store';
 import AppNavigator from './src/navigation/AppNavigator';
+import { linking } from './src/navigation/linking.config';
 import { COLORS } from './src/constants/colors';
 import { checkAuth, logout } from './src/store/slices/authSlice';
 import { requestStoragePermissions } from './src/utils/permissions.utils';
@@ -23,6 +24,7 @@ const handleNotificationNavigation = (
   const nav = navRef.current as any;
 
   switch (data.type) {
+    // ── Battle ──────────────────────────────────────────
     case 'BATTLE_CHALLENGE':
     case 'BATTLE_STARTED':
       if (data.battleId) nav.navigate('LiveBattle', { battleId: data.battleId });
@@ -34,6 +36,46 @@ const handleNotificationNavigation = (
     case 'BATTLE_CANCELLED':
       nav.navigate('BattleList');
       break;
+
+    // ── Tournament ───────────────────────────────────────
+    case 'TOURNAMENT_PRIZE':
+    case 'TOURNAMENT_COMPLETED':
+      if (data.tournamentId) nav.navigate('TournamentDetails', { tournamentId: data.tournamentId });
+      break;
+
+    // ── Social ───────────────────────────────────────────
+    case 'SOCIAL_LIKE':
+    case 'SOCIAL_COMMENT':
+      if (data.postId) nav.navigate('PostDetail', { postId: data.postId });
+      break;
+    case 'SOCIAL_FOLLOW':
+      if (data.followerId) nav.navigate('UserProfile', { userId: data.followerId });
+      break;
+
+    // ── Wallet / Coins ───────────────────────────────────
+    case 'COIN_PURCHASE':
+    case 'COINS_RECEIVED':
+    case 'TOURNAMENT_PRIZE_CREDITED':
+      nav.navigate('Wallet');
+      break;
+
+    // ── Achievements ─────────────────────────────────────
+    case 'ACHIEVEMENT':
+      nav.navigate('Achievements');
+      break;
+
+    // ── Content ──────────────────────────────────────────
+    case 'CONTENT_APPROVED':
+    case 'CONTENT_REJECTED':
+    case 'CONTENT_SOLD':
+      nav.navigate('CreatorDashboard');
+      break;
+
+    // ── Payout ───────────────────────────────────────────
+    case 'PAYOUT_PROCESSED':
+      nav.navigate('CreatorDashboard');
+      break;
+
     default:
       break;
   }
@@ -112,7 +154,7 @@ function AppContent() {
   }
 
   return (
-    <NavigationContainer ref={navRef}>
+    <NavigationContainer ref={navRef} linking={linking}>
       <StatusBar barStyle="dark-content" backgroundColor={COLORS.white} />
       <AppNavigator />
       <Toast />

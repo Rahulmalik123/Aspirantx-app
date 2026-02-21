@@ -180,10 +180,12 @@ const CreateBattleScreen = () => {
       setOpponentModal(false);
 
       if (inviteType === 'link' && battle.inviteCode) {
-        // Share the invite code, then go to waiting room
+        // Share the invite code + deep link
+        const shareUrl = `https://aspirantx.com/battle/${battle._id}`;
         Share.share({
-          message: `Challenge me to a battle on AspirantX!\n\nExam: ${allExams.find(e => e._id === selectedExamId)?.name}\nEntry Fee: ${fee} coins\nPrize: ${prizePool} coins\n\nUse this code to join: ${battle.inviteCode}\n\nOpen AspirantX → Battles → Enter Code`,
-          title: 'Battle Invite',
+          message: `Challenge me to a battle on AspirantX! 🏆\n\nExam: ${allExams.find(e => e._id === selectedExamId)?.name}\nEntry Fee: ${fee} coins\nPrize: ${prizePool} coins\n\nJoin with code: ${battle.inviteCode}\nOr tap: ${shareUrl}`,
+          url: shareUrl, // iOS ke liye
+          title: 'Battle Challenge',
         }).catch(() => {});
       } else if (inviteType === 'direct') {
         // Notify user, then go to waiting room

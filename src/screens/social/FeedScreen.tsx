@@ -8,6 +8,7 @@ import {
   RefreshControl,
   ActivityIndicator,
   Alert,
+  Share,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -142,8 +143,13 @@ const FeedScreen = () => {
     fetchFeed(currentPage, true);
   };
 
-  const handleSharePost = (postId: string) => {
-    Alert.alert('Share', 'Share functionality will be implemented');
+  const handleSharePost = async (postId: string) => {
+    const shareUrl = `https://aspirantx.com/post/${postId}`;
+    Share.share({
+      message: `Check out this post on AspirantX! 📚\n\n${shareUrl}`,
+      url: shareUrl, // iOS ke liye
+      title: 'Share Post',
+    }).catch(() => {});
   };
 
   const handleVoteOnPoll = async (postId: string, optionIndex: number) => {
