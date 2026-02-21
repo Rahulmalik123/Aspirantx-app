@@ -17,6 +17,7 @@ export const linking: LinkingOptions<any> = {
     screens: {
       // Root: Auth screen is not deep-linkable
       Main: {
+        initialRouteName: 'MainTabs',
         screens: {
           LiveBattle: 'battle/:battleId',
           BattleResult: 'battle-result/:battleId',

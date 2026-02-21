@@ -86,6 +86,9 @@ import AboutScreen from '../screens/profile/AboutScreen';
 // Social Screens
 import PostDetailScreen from '../screens/social/PostDetailScreen';
 
+// Notification Screen
+import NotificationScreen from '../screens/notifications/NotificationScreen';
+
 export type RootStackParamList = {
   MainTabs: undefined;
   ExamCategories: undefined;
@@ -147,6 +150,7 @@ export type RootStackParamList = {
   Terms: undefined;
   About: undefined;
   PostDetail: { postId: string };
+  Notifications: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -275,6 +279,9 @@ const MainNavigator = () => {
       
       {/* Social Routes */}
       <Stack.Screen name="PostDetail" component={PostDetailScreen} />
+
+      {/* Notification Routes */}
+      <Stack.Screen name="Notifications" component={NotificationScreen} />
     </Stack.Navigator>
   );
 };

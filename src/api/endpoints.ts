@@ -163,8 +163,10 @@ export const ENDPOINTS = {
   // Notifications
   NOTIFICATIONS: '/api/v1/notifications',
   MARK_READ: (id: string) => `/api/v1/notifications/${id}/read`,
+  MARK_BROADCAST_READ: (id: string) => `/api/v1/notifications/broadcast/${id}/read`,
   MARK_ALL_READ: '/api/v1/notifications/read-all',
   NOTIFICATION_SETTINGS: '/api/v1/notifications/settings',
+  DELETE_NOTIFICATION: (id: string) => `/api/v1/notifications/${id}`,
   
   // Analytics
   USER_ANALYTICS: '/api/v1/analytics/user',
