@@ -122,14 +122,18 @@ const NotificationScreen = () => {
 
   const fetchNotifications = useCallback(async (pageNum: number, replace: boolean) => {
     try {
-      const res = await notificationService.getNotifications(pageNum, 20);
-      const items: Notification[] = res?.data ?? [];
+      const res: any = await notificationService.getNotifications(pageNum, 20);
+      const innerData = res?.data;
+      const items: Notification[] = Array.isArray(innerData)
+        ? innerData
+        : (innerData?.data ?? []);
       if (replace) {
         setNotifications(items);
       } else {
         setNotifications(prev => [...prev, ...items]);
       }
-      setHasMore(res?.pagination?.hasMore ?? false);
+      const pagination = Array.isArray(innerData) ? res?.pagination : innerData?.pagination;
+      setHasMore(pagination?.hasMore ?? pagination?.hasNextPage ?? false);
       pageRef.current = pageNum;
     } catch {
       // silent — network error, keep existing data
@@ -303,7 +307,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: COLORS.white,
-    paddingTop: 52,
+    paddingTop: 12,
     paddingBottom: 12,
     paddingHorizontal: 16,
     borderBottomWidth: 1,

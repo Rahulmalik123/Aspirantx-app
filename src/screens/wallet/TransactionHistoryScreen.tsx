@@ -1,75 +1,108 @@
-import React, { useEffect, useState } from 'react';
+import React, {useEffect, useState, useCallback} from 'react';
 import {
   View,
   Text,
   StyleSheet,
   FlatList,
   TouchableOpacity,
+  ActivityIndicator,
+  RefreshControl,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import { COLORS } from '../../constants/colors';
+import {useNavigation} from '@react-navigation/native';
+import {COLORS} from '../../constants/colors';
+import {FONT_FAMILY, FONT_SIZE} from '../../constants/typography';
+import {SPACING, BORDER_RADIUS} from '../../constants/spacing';
 import Header from '../../components/common/Header';
+import CustomIcon from '../../components/CustomIcon';
+import walletService, {Transaction} from '../../api/services/walletService';
 
-interface Transaction {
-  _id: string;
-  type: 'credit' | 'debit';
-  amount: number;
-  source: string;
-  status: 'success' | 'pending' | 'failed';
-  createdAt: string;
-}
+type FilterType = 'all' | 'credit' | 'debit';
 
 const TransactionHistoryScreen = () => {
   const navigation = useNavigation<any>();
-  const [transactions, setTransactions] = useState<Transaction[]>([
-    {
-      _id: '1',
-      type: 'credit',
-      amount: 100,
-      source: 'Wallet Recharge',
-      status: 'success',
-      createdAt: new Date().toISOString(),
-    },
-    {
-      _id: '2',
-      type: 'debit',
-      amount: 50,
-      source: 'Battle Entry',
-      status: 'success',
-      createdAt: new Date().toISOString(),
-    },
-    {
-      _id: '3',
-      type: 'credit',
-      amount: 75,
-      source: 'Battle Win',
-      status: 'success',
-      createdAt: new Date().toISOString(),
-    },
-  ]);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [activeFilter, setActiveFilter] = useState<FilterType>('all');
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
 
-  const getTypeIcon = (type: string) => {
-    return type === 'credit' ? '↓' : '↑';
-  };
+  const PAGE_SIZE = 20;
 
-  const getTypeColor = (type: string) => {
-    return type === 'credit' ? '#10B981' : '#EF4444';
-  };
+  const fetchTransactions = useCallback(
+    async (pageNum = 1, isRefresh = false) => {
+      try {
+        if (pageNum === 1 && !isRefresh) {
+          setLoading(true);
+        }
+
+        const res: any = await walletService.getTransactions(
+          pageNum,
+          PAGE_SIZE,
+        );
+        const newTransactions =
+          res?.data?.data || res?.data?.transactions || res?.transactions || [];
+        const total = res?.data?.total || res?.total || 0;
+
+        if (pageNum === 1) {
+          setTransactions(newTransactions);
+        } else {
+          setTransactions(prev => [...prev, ...newTransactions]);
+        }
+
+        setHasMore(pageNum * PAGE_SIZE < total);
+        setPage(pageNum);
+      } catch (error) {
+        console.error('Error fetching transactions:', error);
+      } finally {
+        setLoading(false);
+        setRefreshing(false);
+        setLoadingMore(false);
+      }
+    },
+    [],
+  );
+
+  useEffect(() => {
+    fetchTransactions(1);
+  }, [fetchTransactions]);
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    fetchTransactions(1, true);
+  }, [fetchTransactions]);
+
+  const onLoadMore = useCallback(() => {
+    if (!loadingMore && hasMore && !loading) {
+      setLoadingMore(true);
+      fetchTransactions(page + 1);
+    }
+  }, [loadingMore, hasMore, loading, page, fetchTransactions]);
+
+  const filteredTransactions = transactions.filter(txn => {
+    if (activeFilter === 'all') return true;
+    return txn.type === activeFilter;
+  });
+
+  const getTypeColor = (type: string) =>
+    type === 'credit' ? COLORS.success : COLORS.error;
 
   const getStatusBadge = (status: string) => {
     switch (status) {
+      case 'completed':
       case 'success':
-        return { text: 'Success', bg: '#D1FAE5', color: '#065F46' };
+        return {text: 'Success', bg: '#D1FAE5', color: '#065F46'};
       case 'pending':
-        return { text: 'Pending', bg: '#FEF3C7', color: '#92400E' };
+        return {text: 'Pending', bg: '#FEF3C7', color: '#92400E'};
       case 'failed':
-        return { text: 'Failed', bg: '#FEE2E2', color: '#991B1B' };
+        return {text: 'Failed', bg: '#FEE2E2', color: '#991B1B'};
       default:
-        return { text: 'Unknown', bg: '#F3F4F6', color: '#6B7280' };
+        return {text: 'Unknown', bg: COLORS.gray100, color: COLORS.gray500};
     }
   };
 
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString: string | Date) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('en-IN', {
       day: 'numeric',
@@ -80,41 +113,47 @@ const TransactionHistoryScreen = () => {
     });
   };
 
-  const renderTransaction = ({ item }: { item: Transaction }) => {
+  const renderTransaction = ({item}: {item: Transaction}) => {
     const statusBadge = getStatusBadge(item.status);
+    const typeColor = getTypeColor(item.type);
 
     return (
-      <View style={styles.transactionCard}>
-        <View style={[
-          styles.iconCircle,
-          { backgroundColor: getTypeColor(item.type) + '20' }
-        ]}>
-          <Text style={[styles.iconText, { color: getTypeColor(item.type) }]}>
-            {getTypeIcon(item.type)}
-          </Text>
+      <View style={styles.transactionRow}>
+        <View style={[styles.iconDot, {backgroundColor: typeColor + '12'}]}>
+          <CustomIcon
+            name={item.type === 'credit' ? 'arrow-down' : 'arrow-up'}
+            size={16}
+            color={typeColor}
+          />
         </View>
 
         <View style={styles.transactionContent}>
-          <Text style={styles.transactionSource}>{item.source}</Text>
-          <Text style={styles.transactionDate}>{formatDate(item.createdAt)}</Text>
-        </View>
-
-        <View style={styles.transactionRight}>
-          <Text style={[
-            styles.transactionAmount,
-            { color: getTypeColor(item.type) }
-          ]}>
-            {item.type === 'credit' ? '+' : '-'}🪙 {item.amount}
+          <Text style={styles.transactionDesc} numberOfLines={1}>
+            {item.description || 'Transaction'}
           </Text>
-          <View style={[styles.statusBadge, { backgroundColor: statusBadge.bg }]}>
-            <Text style={[styles.statusText, { color: statusBadge.color }]}>
+          <View style={styles.transactionMeta}>
+            <Text style={styles.transactionDate}>
+              {formatDate(item.createdAt)}
+            </Text>
+            <View style={[styles.statusDot, {backgroundColor: statusBadge.color}]} />
+            <Text style={[styles.statusLabel, {color: statusBadge.color}]}>
               {statusBadge.text}
             </Text>
           </View>
         </View>
+
+        <Text style={[styles.transactionAmount, {color: typeColor}]}>
+          {item.type === 'credit' ? '+' : '-'}{item.amount}
+        </Text>
       </View>
     );
   };
+
+  const filters: {key: FilterType; label: string}[] = [
+    {key: 'all', label: 'All'},
+    {key: 'credit', label: 'Credit'},
+    {key: 'debit', label: 'Debit'},
+  ];
 
   return (
     <View style={styles.container}>
@@ -124,30 +163,73 @@ const TransactionHistoryScreen = () => {
       />
 
       <View style={styles.filterRow}>
-        <TouchableOpacity style={styles.filterButton}>
-          <Text style={styles.filterText}>All</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.filterButtonOutline}>
-          <Text style={styles.filterTextOutline}>Credit</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.filterButtonOutline}>
-          <Text style={styles.filterTextOutline}>Debit</Text>
-        </TouchableOpacity>
+        {filters.map(filter => (
+          <TouchableOpacity
+            key={filter.key}
+            style={[
+              styles.filterChip,
+              activeFilter === filter.key
+                ? styles.filterChipActive
+                : styles.filterChipInactive,
+            ]}
+            onPress={() => setActiveFilter(filter.key)}>
+            <Text
+              style={[
+                styles.filterLabel,
+                activeFilter === filter.key
+                  ? styles.filterLabelActive
+                  : styles.filterLabelInactive,
+              ]}>
+              {filter.label}
+            </Text>
+          </TouchableOpacity>
+        ))}
       </View>
 
-      <FlatList
-        data={transactions}
-        renderItem={renderTransaction}
-        keyExtractor={(item) => item._id}
-        contentContainerStyle={styles.list}
-        showsVerticalScrollIndicator={false}
-        ListEmptyComponent={
-          <View style={styles.emptyState}>
-            <Text style={styles.emptyEmoji}>📭</Text>
-            <Text style={styles.emptyText}>No transactions yet</Text>
-          </View>
-        }
-      />
+      {loading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={COLORS.primary} />
+        </View>
+      ) : (
+        <FlatList
+          data={filteredTransactions}
+          renderItem={renderTransaction}
+          keyExtractor={item => item._id}
+          contentContainerStyle={styles.list}
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={[COLORS.primary]}
+            />
+          }
+          onEndReached={onLoadMore}
+          onEndReachedThreshold={0.3}
+          ListFooterComponent={
+            loadingMore ? (
+              <View style={styles.footerLoader}>
+                <ActivityIndicator size="small" color={COLORS.primary} />
+              </View>
+            ) : null
+          }
+          ListEmptyComponent={
+            <View style={styles.emptyState}>
+              <CustomIcon
+                name="receipt-outline"
+                size={48}
+                color={COLORS.gray300}
+              />
+              <Text style={styles.emptyTitle}>No transactions yet</Text>
+              <Text style={styles.emptySubText}>
+                {activeFilter !== 'all'
+                  ? `No ${activeFilter} transactions found`
+                  : 'Your transaction history will appear here'}
+              </Text>
+            </View>
+          }
+        />
+      )}
     </View>
   );
 };
@@ -155,124 +237,116 @@ const TransactionHistoryScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: COLORS.backgroundSecondary,
   },
-  header: {
-    flexDirection: 'row',
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
     alignItems: 'center',
-    padding: 20,
-    backgroundColor: COLORS.white,
-  },
-  backIcon: {
-    fontSize: 32,
-    color: '#111827',
-    marginRight: 12,
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#111827',
   },
   filterRow: {
     flexDirection: 'row',
-    gap: 8,
-    padding: 16,
+    gap: SPACING.sm,
+    paddingHorizontal: SPACING.md,
+    paddingVertical: SPACING.sm + 4,
     backgroundColor: COLORS.white,
-    marginBottom: 8,
   },
-  filterButton: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
+  filterChip: {
+    paddingHorizontal: SPACING.md,
+    paddingVertical: SPACING.xs + 2,
+    borderRadius: BORDER_RADIUS.full,
+  },
+  filterChipActive: {
     backgroundColor: COLORS.primary,
   },
-  filterButtonOutline: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    backgroundColor: COLORS.white,
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
+  filterChipInactive: {
+    backgroundColor: COLORS.gray100,
   },
-  filterText: {
-    fontSize: 14,
-    fontWeight: '600',
+  filterLabel: {
+    fontSize: FONT_SIZE.sm,
+    fontFamily: FONT_FAMILY.medium,
+  },
+  filterLabelActive: {
     color: COLORS.white,
   },
-  filterTextOutline: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#6B7280',
+  filterLabelInactive: {
+    color: COLORS.textSecondary,
   },
   list: {
-    padding: 20,
+    paddingHorizontal: SPACING.md,
+    paddingTop: SPACING.xs,
+    paddingBottom: SPACING.md,
+    flexGrow: 1,
+    backgroundColor: COLORS.white,
   },
-  transactionCard: {
+  transactionRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.white,
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 2,
+    paddingVertical: SPACING.sm + 4,
+    paddingHorizontal: SPACING.xs,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.gray100,
   },
-  iconCircle: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+  iconDot: {
+    width: 34,
+    height: 34,
+    borderRadius: BORDER_RADIUS.full,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 12,
-  },
-  iconText: {
-    fontSize: 24,
-    fontWeight: '700',
+    marginRight: SPACING.sm + 4,
   },
   transactionContent: {
     flex: 1,
   },
-  transactionSource: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#111827',
-    marginBottom: 4,
+  transactionDesc: {
+    fontSize: FONT_SIZE.sm,
+    fontFamily: FONT_FAMILY.medium,
+    color: COLORS.textPrimary,
+    marginBottom: 3,
   },
-  transactionDate: {
-    fontSize: 12,
-    color: '#6B7280',
-  },
-  transactionRight: {
-    alignItems: 'flex-end',
-  },
-  transactionAmount: {
-    fontSize: 16,
-    fontWeight: '700',
-    marginBottom: 6,
-  },
-  statusBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 8,
-  },
-  statusText: {
-    fontSize: 11,
-    fontWeight: '600',
-  },
-  emptyState: {
-    padding: 60,
+  transactionMeta: {
+    flexDirection: 'row',
     alignItems: 'center',
   },
-  emptyEmoji: {
-    fontSize: 48,
-    marginBottom: 16,
+  transactionDate: {
+    fontSize: FONT_SIZE.xs,
+    fontFamily: FONT_FAMILY.regular,
+    color: COLORS.textTertiary,
   },
-  emptyText: {
-    fontSize: 16,
-    color: '#6B7280',
+  statusDot: {
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    marginHorizontal: SPACING.xs + 2,
+  },
+  statusLabel: {
+    fontSize: FONT_SIZE.xs,
+    fontFamily: FONT_FAMILY.regular,
+  },
+  transactionAmount: {
+    fontSize: FONT_SIZE.sm,
+    fontFamily: FONT_FAMILY.semiBold,
+  },
+  emptyState: {
+    paddingVertical: SPACING['4xl'],
+    alignItems: 'center',
+  },
+  emptyTitle: {
+    fontSize: FONT_SIZE.base,
+    fontFamily: FONT_FAMILY.semiBold,
+    color: COLORS.textPrimary,
+    marginTop: SPACING.md,
+    marginBottom: SPACING.xs,
+  },
+  emptySubText: {
+    fontSize: FONT_SIZE.sm,
+    fontFamily: FONT_FAMILY.regular,
+    color: COLORS.textSecondary,
+    textAlign: 'center',
+  },
+  footerLoader: {
+    paddingVertical: SPACING.lg,
+    alignItems: 'center',
   },
 });
 

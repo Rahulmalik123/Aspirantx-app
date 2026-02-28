@@ -9,6 +9,8 @@ import {
   Platform,
   ScrollView,
   ActivityIndicator,
+  Image,
+  StatusBar,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useDispatch } from 'react-redux';
@@ -21,7 +23,7 @@ import { sendOTP } from '../../store/slices/authSlice';
 const RegisterScreen = () => {
   const navigation = useNavigation<any>();
   const dispatch = useDispatch<AppDispatch>();
-  
+
   const [phone, setPhone] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -47,9 +49,9 @@ const RegisterScreen = () => {
     try {
       setLoading(true);
       const result = await dispatch(sendOTP({ phone: `+91${phone}`, purpose: 'registration' })).unwrap();
-      
+
       if (result.success) {
-        navigation.navigate(ROUTES.OTP, { 
+        navigation.navigate(ROUTES.OTP, {
           phone: `+91${phone}`,
           purpose: 'registration'
         });
@@ -68,6 +70,7 @@ const RegisterScreen = () => {
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
+      <StatusBar barStyle="dark-content" backgroundColor={COLORS.white} />
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
@@ -78,29 +81,32 @@ const RegisterScreen = () => {
           onPress={() => navigation.goBack()}
           activeOpacity={0.7}
         >
-          <Text style={styles.backButtonText}>← Back</Text>
+          <Text style={styles.backButtonText}>Back</Text>
         </TouchableOpacity>
 
         <View style={styles.header}>
-          <Text style={styles.logo}>🎓</Text>
-          <Text style={styles.title}>Create Account</Text>
-          <Text style={styles.subtitle}>Join thousands of aspirants</Text>
+          <Image
+            source={require('../../assets/images/blue-icon-white-bg.png')}
+            style={styles.logo}
+            resizeMode="contain"
+          />
+          <Text style={styles.appName}>Aspirantx</Text>
         </View>
 
         <View style={styles.formContainer}>
-          <Text style={styles.welcomeText}>Get Started</Text>
-          <Text style={styles.instructionText}>
-            Enter your phone number to create an account
+          <Text style={styles.title}>Create account</Text>
+          <Text style={styles.subtitle}>
+            Enter your phone number to get started
           </Text>
 
           <View style={styles.inputContainer}>
-            <View style={styles.phoneInputWrapper}>
-              <View style={styles.countryCode}>
-                <Text style={styles.countryCodeText}>🇮🇳 +91</Text>
-              </View>
+            <Text style={styles.inputLabel}>Phone Number</Text>
+            <View style={[styles.phoneInputWrapper, error ? styles.inputError : null]}>
+              <Text style={styles.countryCodeText}>+91</Text>
+              <View style={styles.inputDivider} />
               <TextInput
                 style={styles.phoneInput}
-                placeholder="Enter 10-digit mobile number"
+                placeholder="10-digit mobile number"
                 placeholderTextColor={COLORS.gray400}
                 value={phone}
                 onChangeText={(text) => {
@@ -115,46 +121,38 @@ const RegisterScreen = () => {
           </View>
 
           {error ? (
-            <View style={styles.errorContainer}>
-              <Text style={styles.errorText}>⚠️ {error}</Text>
-            </View>
+            <Text style={styles.errorText}>{error}</Text>
           ) : null}
 
           <TouchableOpacity
             style={[styles.button, loading && styles.buttonDisabled]}
             onPress={handleSendOTP}
             disabled={loading}
-            activeOpacity={0.8}
+            activeOpacity={0.7}
           >
             {loading ? (
               <ActivityIndicator color={COLORS.white} />
             ) : (
-              <Text style={styles.buttonText}>Create Account</Text>
+              <Text style={styles.buttonText}>Continue</Text>
             )}
-          </TouchableOpacity>
-
-          <View style={styles.divider}>
-            <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>OR</Text>
-            <View style={styles.dividerLine} />
-          </View>
-
-          <TouchableOpacity
-            style={styles.loginButton}
-            onPress={() => navigation.navigate(ROUTES.LOGIN)}
-            activeOpacity={0.8}
-          >
-            <Text style={styles.loginButtonText}>
-              Already have an account? <Text style={styles.loginLinkText}>Sign In</Text>
-            </Text>
           </TouchableOpacity>
         </View>
 
         <View style={styles.footer}>
-          <Text style={styles.footerText}>
+          <TouchableOpacity
+            onPress={() => navigation.navigate(ROUTES.LOGIN)}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.footerText}>
+              Already have an account?{' '}
+              <Text style={styles.footerLink}>Sign In</Text>
+            </Text>
+          </TouchableOpacity>
+
+          <Text style={styles.termsText}>
             By creating an account, you agree to our{' '}
-            <Text style={styles.footerLink}>Terms of Service</Text> and{' '}
-            <Text style={styles.footerLink}>Privacy Policy</Text>
+            <Text style={styles.termsLink}>Terms</Text> &{' '}
+            <Text style={styles.termsLink}>Privacy Policy</Text>
           </Text>
         </View>
       </ScrollView>
@@ -171,155 +169,131 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     paddingHorizontal: SPACING.lg,
     paddingTop: SPACING.xl,
-    paddingBottom: SPACING.lg,
   },
   backButton: {
     alignSelf: 'flex-start',
     paddingVertical: SPACING.sm,
-    paddingHorizontal: SPACING.md,
-    marginBottom: SPACING.lg,
+    marginBottom: SPACING.md,
   },
   backButtonText: {
-    fontSize: 16,
-    color: COLORS.primary,
-    fontWeight: '600',
+    fontSize: 15,
+    color: COLORS.gray500,
+    fontWeight: '500',
   },
   header: {
     alignItems: 'center',
-    marginBottom: SPACING.xl,
+    marginBottom: 40,
   },
   logo: {
-    fontSize: 64,
-    marginBottom: SPACING.md,
+    width: 72,
+    height: 72,
+    marginBottom: 12,
   },
-  title: {
-    fontSize: 32,
-    fontWeight: 'bold',
+  appName: {
+    fontSize: 22,
+    fontWeight: '700',
     color: COLORS.primary,
-    marginBottom: SPACING.xs,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: COLORS.gray600,
-    textAlign: 'center',
+    letterSpacing: 0.5,
   },
   formContainer: {
-    flex: 1,
+    marginBottom: 32,
   },
-  welcomeText: {
+  title: {
     fontSize: 28,
-    fontWeight: 'bold',
+    fontWeight: '700',
     color: COLORS.gray900,
-    marginBottom: SPACING.xs,
+    marginBottom: 6,
   },
-  instructionText: {
+  subtitle: {
     fontSize: 15,
-    color: COLORS.gray600,
-    marginBottom: SPACING.xl,
+    color: COLORS.gray500,
+    marginBottom: 28,
   },
   inputContainer: {
-    marginBottom: SPACING.md,
+    marginBottom: 16,
+  },
+  inputLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: COLORS.gray700,
+    marginBottom: 8,
+    letterSpacing: 0.3,
   },
   phoneInputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderWidth: 2,
+    borderWidth: 1.5,
     borderColor: COLORS.gray300,
     borderRadius: 12,
-    backgroundColor: COLORS.white,
-    overflow: 'hidden',
-  },
-  countryCode: {
-    paddingHorizontal: SPACING.md,
-    paddingVertical: SPACING.md,
     backgroundColor: COLORS.gray100,
-    borderRightWidth: 1,
-    borderRightColor: COLORS.gray300,
+    height: 52,
+  },
+  inputError: {
+    borderColor: COLORS.error,
   },
   countryCodeText: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '600',
-    color: COLORS.gray900,
+    color: COLORS.gray700,
+    paddingHorizontal: 16,
+  },
+  inputDivider: {
+    width: 1,
+    height: 24,
+    backgroundColor: COLORS.gray300,
   },
   phoneInput: {
     flex: 1,
-    paddingHorizontal: SPACING.md,
-    paddingVertical: SPACING.md,
-    fontSize: 16,
+    paddingHorizontal: 14,
+    fontSize: 15,
     color: COLORS.gray900,
-  },
-  errorContainer: {
-    backgroundColor: COLORS.error + '15',
-    padding: SPACING.sm,
-    borderRadius: 8,
-    marginBottom: SPACING.md,
+    height: '100%',
   },
   errorText: {
     color: COLORS.error,
-    fontSize: 14,
+    fontSize: 13,
+    marginBottom: 12,
   },
   button: {
     backgroundColor: COLORS.primary,
-    paddingVertical: SPACING.md + 2,
+    height: 52,
     borderRadius: 12,
     alignItems: 'center',
-    marginTop: SPACING.sm,
-    elevation: 2,
-    shadowColor: COLORS.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
+    justifyContent: 'center',
+    marginTop: 4,
   },
   buttonDisabled: {
-    opacity: 0.7,
+    opacity: 0.6,
   },
   buttonText: {
     color: COLORS.white,
-    fontSize: 17,
-    fontWeight: '700',
-  },
-  divider: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginVertical: SPACING.xl,
-  },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: COLORS.gray300,
-  },
-  dividerText: {
-    marginHorizontal: SPACING.md,
-    color: COLORS.gray500,
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: '600',
   },
-  loginButton: {
-    paddingVertical: SPACING.md,
-    borderRadius: 12,
-    alignItems: 'center',
-  },
-  loginButtonText: {
-    fontSize: 16,
-    color: COLORS.gray700,
-  },
-  loginLinkText: {
-    color: COLORS.primary,
-    fontWeight: '700',
-  },
   footer: {
-    marginTop: SPACING.xl,
-    paddingTop: SPACING.lg,
+    flex: 1,
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+    paddingBottom: SPACING.xl,
   },
   footerText: {
-    fontSize: 12,
+    fontSize: 14,
     color: COLORS.gray500,
-    textAlign: 'center',
-    lineHeight: 18,
+    marginBottom: 20,
   },
   footerLink: {
     color: COLORS.primary,
     fontWeight: '600',
+  },
+  termsText: {
+    fontSize: 12,
+    color: COLORS.gray400,
+    textAlign: 'center',
+    lineHeight: 18,
+  },
+  termsLink: {
+    color: COLORS.gray500,
+    fontWeight: '500',
   },
 });
 

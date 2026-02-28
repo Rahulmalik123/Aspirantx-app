@@ -16,6 +16,7 @@ import {
   Dimensions,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
+import { useSelector } from 'react-redux';
 import { Comment } from '../../types/social.types';
 import { socialService } from '../../api/services/social.service';
 import { COLORS } from '../../constants/colors';
@@ -35,6 +36,7 @@ const CommentModal: React.FC<CommentModalProps> = ({
   onClose,
   onCommentAdded,
 }) => {
+  const currentUser = useSelector((state: any) => state.auth.user);
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(false);
   const [commentText, setCommentText] = useState('');
@@ -156,7 +158,9 @@ const CommentModal: React.FC<CommentModalProps> = ({
 
   const renderComment = ({ item }: { item: Comment }) => {
     const userInfo = getUserInfo(item);
-    const isOwnComment = false; // TODO: Check with actual user ID
+    const userObj = (item as any).user || item.userId;
+    const commentUserId = typeof userObj === 'object' ? userObj?._id : userObj;
+    const isOwnComment = !!currentUser?._id && commentUserId === currentUser._id;
 
     return (
       <View style={styles.commentItem}>

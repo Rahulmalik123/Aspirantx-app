@@ -44,10 +44,6 @@ const UploadContentScreen = () => {
 
   const contentTypes = [
     {label: 'PDF Notes', value: 'pdf', icon: 'file-pdf-box'},
-    {label: 'Video', value: 'video', icon: 'video'},
-    {label: 'eBook', value: 'ebook', icon: 'book-open-variant'},
-    {label: 'Study Notes', value: 'notes', icon: 'notebook'},
-    {label: 'Practice Set', value: 'practice_set', icon: 'pencil'},
   ];
   const categories = ['Notes', 'Test Series', /* 'PYQ', */ 'Mock Tests', 'Study Material'];
   

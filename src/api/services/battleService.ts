@@ -41,6 +41,7 @@ export interface Battle {
   inviteType: 'open' | 'link' | 'direct';
   inviteCode?: string;
   challengedUser?: BattleParticipant;
+  myAnsweredCount?: number;
 }
 
 export interface CreateBattleParams {

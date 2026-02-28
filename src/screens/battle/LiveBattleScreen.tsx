@@ -68,12 +68,26 @@ const LiveBattleScreen: React.FC<Props> = ({ route, navigation }) => {
     };
   }, [currentIndex, battle?.status]);
 
+  const hasResumed = useRef(false);
+
   const loadBattle = async () => {
     try {
       const data = await battleService.getBattle(battleId);
       setBattle(data);
       if (data.status === 'completed') {
         navigation.replace('BattleResult', { battleId });
+        return;
+      }
+      // On first load, resume from where user left off
+      if (!hasResumed.current && data.myAnsweredCount != null && data.myAnsweredCount > 0) {
+        hasResumed.current = true;
+        const total = data.questions.length;
+        if (data.myAnsweredCount >= total) {
+          // All questions already answered, go to results
+          navigation.replace('BattleResult', { battleId });
+          return;
+        }
+        setCurrentIndex(data.myAnsweredCount);
       }
     } catch {
       // silent

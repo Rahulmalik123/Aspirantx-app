@@ -39,7 +39,7 @@ class RazorpayService {
         key: this.RAZORPAY_KEY,
         amount: amount * 100, // Convert to paise
         currency: 'INR',
-        name: 'AspirantHub',
+        name: 'Aspirantx',
         description: 'Wallet Recharge',
         order_id: orderId,
         prefill: {
@@ -97,7 +97,7 @@ class RazorpayService {
         key: this.RAZORPAY_KEY,
         amount: amount * 100,
         currency: 'INR',
-        name: 'AspirantHub',
+        name: 'Aspirantx',
         description: description,
         order_id: orderId,
         prefill: {

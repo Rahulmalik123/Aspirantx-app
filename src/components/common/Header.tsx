@@ -56,7 +56,7 @@ const Header: React.FC<HeaderProps> = ({
             {/* Logo and Exam Selector - Left side grouped */}
             <View style={styles.leftSection}>
               <Image 
-                source={require('../../assets/images/logo.jpeg')} 
+                source={require('../../assets/images/blue-icon-white-bg.png')} 
                 style={styles.logo}
                 resizeMode="contain"
               />

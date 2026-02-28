@@ -132,11 +132,8 @@ const LeaderboardScreen = () => {
       <View style={styles.userInfo}>
         <Text style={styles.userName} numberOfLines={1}>{item.name}</Text>
         <View style={styles.statsRow}>
-          <View style={styles.pointsContainer}>
-            <Icon name="flash" size={12} color="#FFD700" />
-            <Text style={styles.points}>{item.karma || 0} karma</Text>
-          </View>
           <Text style={styles.levelBadge}>Lv {item.level || 1}</Text>
+          <Text style={styles.points}>{item.experience || 0} XP</Text>
         </View>
       </View>
 
@@ -212,10 +209,7 @@ const LeaderboardScreen = () => {
             </View>
             <View>
               <Text style={styles.currentUserName}>You</Text>
-              <View style={styles.pointsContainer}>
-                <Icon name="flash" size={12} color="#FFD700" />
-                <Text style={styles.currentUserPoints}>{currentUser.karma || 0} karma</Text>
-              </View>
+              <Text style={styles.currentUserPoints}>Lv {currentUser.level || 1} · {currentUser.experience || 0} XP</Text>
             </View>
           </View>
           <View style={styles.currentUserRight}>
@@ -481,11 +475,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-  },
-  pointsContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
   },
   points: {
     fontSize: 12,

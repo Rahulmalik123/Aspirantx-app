@@ -7,7 +7,6 @@ export interface SocialPost {
     _id: string;
     name: string;
     avatar?: string;
-    karma: number;
   };
   content: string;
   images?: string[];

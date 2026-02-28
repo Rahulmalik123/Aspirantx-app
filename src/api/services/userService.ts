@@ -13,7 +13,6 @@ export interface UserProfile {
     category: string;
   }>;
   coins: number;
-  karma: number;
   level: number;
   experience: number;
   currentStreak: number;
@@ -48,7 +47,6 @@ export interface DashboardStats {
   };
   gamification: {
     coins: number;
-    karma: number;
     level: number;
     experience: number;
     currentStreak: number;
@@ -72,7 +70,6 @@ export interface LeaderboardUser {
   _id: string;
   name: string;
   avatar?: string;
-  karma: number;
   level: number;
   experience: number;
   rank: number;

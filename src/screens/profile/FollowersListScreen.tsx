@@ -20,7 +20,6 @@ interface User {
   _id: string;
   name: string;
   avatar?: string;
-  karma: number;
 }
 
 const FollowersListScreen = () => {
@@ -84,10 +83,6 @@ const FollowersListScreen = () => {
         )}
         <View style={styles.userDetails}>
           <Text style={styles.userName}>{item.name}</Text>
-          <View style={styles.karmaContainer}>
-            <Icon name="star" size={14} color="#FFD700" />
-            <Text style={styles.karmaText}>{item.karma} karma</Text>
-          </View>
         </View>
       </View>
       <Icon name="chevron-forward" size={20} color={COLORS.textLight} />
@@ -261,15 +256,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: COLORS.text,
     marginBottom: 4,
-  },
-  karmaContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  karmaText: {
-    fontSize: 14,
-    color: COLORS.textLight,
-    marginLeft: 4,
   },
   emptyContainer: {
     alignItems: 'center',

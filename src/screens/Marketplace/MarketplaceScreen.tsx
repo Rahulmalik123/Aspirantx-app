@@ -35,9 +35,6 @@ const MarketplaceScreen = ({navigation}: any) => {
   const contentTypes = [
     {label: 'All', value: 'all', icon: 'view-grid'},
     {label: 'PDF', value: 'pdf', icon: 'file-pdf-box'},
-    {label: 'Video', value: 'video', icon: 'video'},
-    {label: 'Notes', value: 'notes', icon: 'notebook'},
-    {label: 'Practice', value: 'practice_set', icon: 'pencil'},
   ];
 
   const sortOptions = [
