@@ -13,6 +13,8 @@ import { RootStackParamList } from '../../navigation/MainNavigator';
 import { COLORS } from '../../constants/colors';
 import battleService, { Battle, BattleQuestion } from '../../api/services/battleService';
 import CustomIcon from '../../components/CustomIcon';
+import LanguageToggle from '../../components/common/LanguageToggle';
+import { useQuestionLanguage } from '../../hooks/useQuestionLanguage';
 import { showErrorToast } from '../../utils/toast';
 
 type Props = {
@@ -39,6 +41,7 @@ const LiveBattleScreen: React.FC<Props> = ({ route, navigation }) => {
   const questionStartTime = useRef<number>(Date.now());
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const { language, toggleLanguage, getQuestionText, getOptionText } = useQuestionLanguage();
 
   useEffect(() => {
     loadBattle();
@@ -269,6 +272,7 @@ const LiveBattleScreen: React.FC<Props> = ({ route, navigation }) => {
           <View style={[styles.progressFill, { width: `${progress * 100}%` as any }]} />
         </View>
         <Text style={styles.progressLabel}>{currentIndex + 1}/{total}</Text>
+        <LanguageToggle language={language} onToggle={toggleLanguage} />
       </View>
 
       {/* Question + Options */}
@@ -279,11 +283,11 @@ const LiveBattleScreen: React.FC<Props> = ({ route, navigation }) => {
       >
         <View style={styles.questionCard}>
           <Text style={styles.questionNum}>Question {currentIndex + 1}</Text>
-          <Text style={styles.questionText}>{question?.questionText}</Text>
+          <Text style={styles.questionText}>{getQuestionText(question)}</Text>
         </View>
 
         <View style={styles.optionsWrapper}>
-          {(question?.options ?? []).map((opt, i) => (
+          {(question?.options ?? []).map((_opt, i) => (
             <TouchableOpacity
               key={i}
               style={getOptionStyle(i)}
@@ -295,7 +299,7 @@ const LiveBattleScreen: React.FC<Props> = ({ route, navigation }) => {
                 <Text style={styles.optionLabelText}>{OPTION_LABELS[i]}</Text>
               </View>
               <Text style={styles.optionText}>
-                {typeof opt === 'string' ? opt : (opt as any).text}
+                {getOptionText(question, i)}
               </Text>
               {submitting && selectedOption === i && (
                 <ActivityIndicator size="small" color={COLORS.primary} style={{ marginLeft: 8 }} />

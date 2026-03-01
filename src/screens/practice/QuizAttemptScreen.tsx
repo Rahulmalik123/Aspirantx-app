@@ -14,6 +14,8 @@ import { COLORS } from '../../constants/colors';
 import apiClient from '../../api/client';
 import { Question } from '../../types/question.types';
 import Header from '../../components/common/Header';
+import LanguageToggle from '../../components/common/LanguageToggle';
+import { useQuestionLanguage } from '../../hooks/useQuestionLanguage';
 
 const QuizAttemptScreen = () => {
   const navigation = useNavigation<any>();
@@ -29,6 +31,7 @@ const QuizAttemptScreen = () => {
   const [startTime] = useState<number>(Date.now());
   const [questionStartTime, setQuestionStartTime] = useState<number>(Date.now());
   const [questionTimes, setQuestionTimes] = useState<Record<string, number>>({});
+  const { language, toggleLanguage, getQuestionText, getOptionText, getExplanation } = useQuestionLanguage();
 
   useEffect(() => {
     fetchQuizData();
@@ -198,11 +201,12 @@ const QuizAttemptScreen = () => {
 
   return (
     <View style={styles.container}>
-      <Header 
+      <Header
         title={`Question ${currentIndex + 1}/${questions.length}`}
         subtitle={!isReview ? `⏱ ${formatTime(timeLeft)}` : undefined}
         onBackPress={() => navigation.goBack()}
         showBackButton={true}
+        rightComponent={<LanguageToggle language={language} onToggle={toggleLanguage} />}
       />
 
       {/* Progress Bar */}
@@ -213,7 +217,7 @@ const QuizAttemptScreen = () => {
       {/* Question Content */}
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.questionCard}>
-          <Text style={styles.questionText}>{currentQuestion.questionText}</Text>
+          <Text style={styles.questionText}>{getQuestionText(currentQuestion)}</Text>
           {currentQuestion.questionImage && (
             <Text style={styles.imageNote}>📷 Image attached</Text>
           )}
@@ -255,7 +259,7 @@ const QuizAttemptScreen = () => {
                   styles.optionText,
                   isSelected && styles.selectedText,
                 ]}>
-                  {option.text}
+                  {getOptionText(currentQuestion, index)}
                 </Text>
                 {isCorrect && isReview && (
                   <CustomIcon name="checkmark-circle" size={20} color="#10B981" />
@@ -273,12 +277,10 @@ const QuizAttemptScreen = () => {
           <View style={styles.explanationCard}>
             <View style={styles.explanationHeader}>
               <CustomIcon name="bulb-outline" size={20} color="#F59E0B" />
-              <Text style={styles.explanationTitle}>Explanation</Text>
+              <Text style={styles.explanationTitle}>{language === 'hi' ? 'व्याख्या' : 'Explanation'}</Text>
             </View>
             <Text style={styles.explanationText}>
-              {typeof currentQuestion.explanation === 'string' 
-                ? currentQuestion.explanation 
-                : currentQuestion.explanation.text}
+              {getExplanation(currentQuestion)}
             </Text>
           </View>
         )}
@@ -294,7 +296,7 @@ const QuizAttemptScreen = () => {
             {currentQuestion.options[selectedOption] && !currentQuestion.options[selectedOption].isCorrect && (
               <View style={styles.correctOptionHighlight}>
                 <Text style={styles.correctOptionText}>
-                  {currentQuestion.options.find((opt: any) => opt.isCorrect)?.text}
+                  {getOptionText(currentQuestion, currentQuestion.options.findIndex((opt: any) => opt.isCorrect))}
                 </Text>
               </View>
             )}

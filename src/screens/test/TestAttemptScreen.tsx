@@ -11,6 +11,8 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import { COLORS } from '../../constants/colors';
 import testService from '../../api/services/testService';
 import Header from '../../components/common/Header';
+import LanguageToggle from '../../components/common/LanguageToggle';
+import { useQuestionLanguage } from '../../hooks/useQuestionLanguage';
 
 const TestAttemptScreen = () => {
   const navigation = useNavigation<any>();
@@ -25,6 +27,7 @@ const TestAttemptScreen = () => {
   const submittingRef = useRef(false);
   const selectedAnswersRef = useRef<{ [key: number]: number }>({});
   const questionsRef = useRef(questions);
+  const { language, toggleLanguage, getQuestionText, getOptionText } = useQuestionLanguage();
 
   // Keep refs in sync with state
   useEffect(() => {
@@ -231,18 +234,21 @@ const TestAttemptScreen = () => {
         <View style={styles.headerLeft}>
           <Text style={styles.questionNumber}>Q {currentIndex + 1}/{questions.length}</Text>
         </View>
-        <View style={styles.timerBox}>
-          <Text style={styles.timerText}>⏱ {formatTime(timeLeft)}</Text>
+        <View style={styles.headerRight}>
+          <LanguageToggle language={language} onToggle={toggleLanguage} />
+          <View style={styles.timerBox}>
+            <Text style={styles.timerText}>⏱ {formatTime(timeLeft)}</Text>
+          </View>
         </View>
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false} style={styles.content}>
         <View style={styles.questionCard}>
-          <Text style={styles.questionText}>{currentQuestion.question}</Text>
+          <Text style={styles.questionText}>{getQuestionText(currentQuestion)}</Text>
         </View>
 
         <View style={styles.optionsContainer}>
-          {currentQuestion?.options?.map((option: string, index: number) => (
+          {currentQuestion?.options?.map((option: any, index: number) => (
             <TouchableOpacity
               key={index}
               style={[
@@ -263,7 +269,7 @@ const TestAttemptScreen = () => {
                 styles.optionText,
                 selectedAnswers[currentIndex] === index && styles.optionTextSelected,
               ]}>
-                {option}
+                {getOptionText(currentQuestion, index)}
               </Text>
             </TouchableOpacity>
           ))}
@@ -335,6 +341,11 @@ const styles = StyleSheet.create({
   },
   headerLeft: {
     flex: 1,
+  },
+  headerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
   },
   questionNumber: {
     fontSize: 16,
