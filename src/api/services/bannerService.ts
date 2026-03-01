@@ -28,11 +28,11 @@ class BannerService {
    */
   async getActiveBanners(): Promise<Banner[]> {
     try {
-      const response = await apiClient.get<BannerResponse>('/api/v1/banners/active');
-      return response.data.data || [];
+      const response: any = await apiClient.get('/api/v1/banners/active');
+      // apiClient interceptor already unwraps response.data, so response IS { success, data }
+      return response.data || [];
     } catch (error) {
       console.error('❌ [BannerService] Failed to fetch active banners:', error);
-      // Return empty array on error to show default content
       return [];
     }
   }
@@ -42,8 +42,8 @@ class BannerService {
    */
   async getBannerById(bannerId: string): Promise<Banner | null> {
     try {
-      const response = await apiClient.get<{ success: boolean; data: Banner }>(`/api/v1/banners/${bannerId}`);
-      return response.data.data;
+      const response: any = await apiClient.get(`/api/v1/banners/${bannerId}`);
+      return response.data || null;
     } catch (error) {
       console.error('❌ [BannerService] Failed to fetch banner:', error);
       return null;

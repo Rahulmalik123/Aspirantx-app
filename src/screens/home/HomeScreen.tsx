@@ -12,6 +12,7 @@ import {
   Alert,
   Dimensions,
   Image,
+  Linking,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useSelector, useDispatch } from 'react-redux';
@@ -235,6 +236,8 @@ const HomeScreen = () => {
       navigation.navigate('ExamDetail', { examId: banner.linkId });
     } else if (banner.linkType === 'tournament' && banner.linkId) {
       navigation.navigate('TournamentDetail', { tournamentId: banner.linkId });
+    } else if (banner.linkType === 'external' && banner.linkUrl) {
+      Linking.openURL(banner.linkUrl).catch(() => {});
     }
   };
 
