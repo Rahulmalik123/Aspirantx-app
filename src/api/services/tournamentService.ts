@@ -143,8 +143,8 @@ class TournamentService {
    */
 
   // 4. POST /join/:tournamentId - Join tournament (Auth Required)
-  async joinTournament(tournamentId: string): Promise<JoinTournamentResponse> {
-    const response = await apiClient.post(ENDPOINTS.JOIN_TOURNAMENT(tournamentId));
+  async joinTournament(tournamentId: string, coinType?: 'paid' | 'free'): Promise<JoinTournamentResponse> {
+    const response = await apiClient.post(ENDPOINTS.JOIN_TOURNAMENT(tournamentId), { coinType: coinType || 'paid' });
     return response.data || response;
   }
 

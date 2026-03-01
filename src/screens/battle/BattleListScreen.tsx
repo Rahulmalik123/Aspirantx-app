@@ -116,9 +116,10 @@ const BattleListScreen = () => {
 
   const handleJoin = async (battle: Battle) => {
     if (!battle.isFree) {
+      const coinLabel = battle.coinType === 'free' ? 'free' : 'paid';
       Alert.alert(
         'Join Battle',
-        `Entry fee: ${battle.entryFee} coins\nWinner gets: ${battle.prizePool} coins\n\nJoin this battle?`,
+        `Entry fee: ${battle.entryFee} ${coinLabel} coins\nWinner gets: ${battle.prizePool} ${coinLabel} coins${battle.coinType === 'free' ? '\n\nNote: Free coin winnings cannot be withdrawn.' : ''}\n\nJoin this battle?`,
         [
           { text: 'Cancel', style: 'cancel' },
           { text: 'Join', onPress: () => doJoin(battle._id) },
@@ -160,8 +161,15 @@ const BattleListScreen = () => {
               <Text style={styles.examName}>{item.exam?.name ?? ''}</Text>
             </View>
           </View>
-          <View style={[styles.diffBadge, { backgroundColor: diff.color + '18' }]}>
-            <Text style={[styles.diffText, { color: diff.color }]}>{diff.label}</Text>
+          <View style={{ flexDirection: 'row', gap: 6 }}>
+            {item.coinType === 'free' && (
+              <View style={[styles.diffBadge, { backgroundColor: '#FEF3C7' }]}>
+                <Text style={[styles.diffText, { color: '#92400E' }]}>FREE</Text>
+              </View>
+            )}
+            <View style={[styles.diffBadge, { backgroundColor: diff.color + '18' }]}>
+              <Text style={[styles.diffText, { color: diff.color }]}>{diff.label}</Text>
+            </View>
           </View>
         </View>
 

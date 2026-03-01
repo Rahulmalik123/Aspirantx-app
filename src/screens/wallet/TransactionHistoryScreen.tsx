@@ -128,9 +128,16 @@ const TransactionHistoryScreen = () => {
         </View>
 
         <View style={styles.transactionContent}>
-          <Text style={styles.transactionDesc} numberOfLines={1}>
-            {item.description || 'Transaction'}
-          </Text>
+          <View style={{flexDirection: 'row', alignItems: 'center', gap: 6}}>
+            <Text style={styles.transactionDesc} numberOfLines={1}>
+              {item.description || 'Transaction'}
+            </Text>
+            {item.coinType === 'free' && (
+              <View style={styles.freeCoinBadge}>
+                <Text style={styles.freeCoinBadgeText}>FREE</Text>
+              </View>
+            )}
+          </View>
           <View style={styles.transactionMeta}>
             <Text style={styles.transactionDate}>
               {formatDate(item.createdAt)}
@@ -347,6 +354,17 @@ const styles = StyleSheet.create({
   footerLoader: {
     paddingVertical: SPACING.lg,
     alignItems: 'center',
+  },
+  freeCoinBadge: {
+    backgroundColor: '#FEF3C7',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  freeCoinBadgeText: {
+    fontSize: 9,
+    fontWeight: '700',
+    color: '#92400E',
   },
 });
 

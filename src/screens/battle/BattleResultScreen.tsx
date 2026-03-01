@@ -103,6 +103,8 @@ const BattleResultScreen = () => {
   const battle = result?.battle;
   const isDraw = battle?.isDraw ?? false;
   const isFree = battle?.isFree ?? false;
+  const battleCoinType = battle?.coinType ?? 'paid';
+  const coinLabel = battleCoinType === 'free' ? 'free' : 'paid';
   const prizePool = battle?.prizePool ?? 0;
   const platformCut = battle?.platformCut ?? 0;
   const entryFee = battle?.entryFee ?? 0;
@@ -196,13 +198,20 @@ const BattleResultScreen = () => {
         {/* Coins Card */}
         {!isFree && (
           <View style={styles.card}>
-            <Text style={styles.cardLabel}>Coins</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+              <Text style={styles.cardLabel}>Coins</Text>
+              <View style={[styles.coinTypeBadge, battleCoinType === 'free' ? styles.coinTypeBadgeFree : styles.coinTypeBadgePaid]}>
+                <Text style={[styles.coinTypeBadgeText, { color: battleCoinType === 'free' ? '#92400E' : '#065F46' }]}>
+                  {battleCoinType === 'free' ? 'FREE COINS' : 'PAID COINS'}
+                </Text>
+              </View>
+            </View>
             {isDraw ? (
               <>
                 <View style={styles.coinRow}>
                   <CustomIcon name="cash-outline" size={22} color="#F59E0B" />
                   <Text style={[styles.coinValue, { color: '#3B82F6' }]}>+{entryFee}</Text>
-                  <Text style={styles.coinNote}>Refunded</Text>
+                  <Text style={styles.coinNote}>Refunded ({coinLabel})</Text>
                 </View>
                 <Text style={styles.platformNote}>Draw — full entry fee returned</Text>
               </>
@@ -211,19 +220,22 @@ const BattleResultScreen = () => {
                 <View style={styles.coinRow}>
                   <CustomIcon name="cash-outline" size={22} color="#F59E0B" />
                   <Text style={[styles.coinValue, { color: '#10B981' }]}>+{prizePool}</Text>
-                  <Text style={styles.coinNote}>Prize earned</Text>
+                  <Text style={styles.coinNote}>Prize earned ({coinLabel})</Text>
                 </View>
                 {platformCut > 0 && (
                   <Text style={styles.platformNote}>
                     Platform fee {platformCut} coins deducted from pool
                   </Text>
                 )}
+                {battleCoinType === 'free' && (
+                  <Text style={styles.platformNote}>Free coin winnings cannot be withdrawn</Text>
+                )}
               </>
             ) : (
               <View style={styles.coinRow}>
                 <CustomIcon name="cash-outline" size={22} color="#F59E0B" />
                 <Text style={[styles.coinValue, { color: '#EF4444' }]}>-{entryFee}</Text>
-                <Text style={styles.coinNote}>Entry fee lost</Text>
+                <Text style={styles.coinNote}>Entry fee lost ({coinLabel})</Text>
               </View>
             )}
           </View>
@@ -391,6 +403,22 @@ const styles = StyleSheet.create({
     borderColor: '#E5E7EB',
   },
   secondaryBtnText: { fontSize: 15, fontWeight: '600', color: '#374151' },
+
+  coinTypeBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+  },
+  coinTypeBadgePaid: {
+    backgroundColor: '#D1FAE5',
+  },
+  coinTypeBadgeFree: {
+    backgroundColor: '#FEF3C7',
+  },
+  coinTypeBadgeText: {
+    fontSize: 9,
+    fontWeight: '700',
+  },
 });
 
 export default BattleResultScreen;

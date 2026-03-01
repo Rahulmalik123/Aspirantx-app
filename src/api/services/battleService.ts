@@ -28,6 +28,7 @@ export interface Battle {
   entryFee: number;
   prizePool: number;
   platformCut: number;
+  coinType: 'paid' | 'free';
   isFree: boolean;
   isDraw: boolean;
   status: 'waiting' | 'ongoing' | 'completed' | 'cancelled';
@@ -50,6 +51,7 @@ export interface CreateBattleParams {
   entryFee: number;
   totalQuestions: number;
   difficulty: 'easy' | 'medium' | 'hard' | 'mixed';
+  coinType?: 'paid' | 'free';
   inviteType?: 'open' | 'link' | 'direct';
   challengedUserId?: string;
 }

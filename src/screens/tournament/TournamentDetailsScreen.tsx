@@ -30,6 +30,7 @@ const TournamentDetailsScreen = () => {
   const { activeTournament, loading } = useSelector((state: RootState) => state.tournament);
   const [canJoin, setCanJoin] = useState<{ canJoin: boolean; reason?: string }>({ canJoin: false });
   const [joining, setJoining] = useState(false);
+  const [coinType, setCoinType] = useState<'paid' | 'free'>('paid');
 
   useEffect(() => {
     if (tournamentId) {
@@ -70,7 +71,7 @@ const TournamentDetailsScreen = () => {
 
     setJoining(true);
     try {
-      const result = await dispatch(joinTournament(tournamentId)).unwrap();
+      const result = await dispatch(joinTournament({ tournamentId, coinType })).unwrap();
       Toast.show({
         type: 'success',
         text1: 'Success!',
@@ -288,10 +289,36 @@ const TournamentDetailsScreen = () => {
             </View>
           )}
 
+          {/* Coin Type Selector (before join) */}
+          {!activeTournament.isJoined && (activeTournament.status === 'upcoming' || activeTournament.status === 'live') && activeTournament.entryFee > 0 && (
+            <View style={styles.coinTypeSection}>
+              <Text style={styles.coinTypeSectionTitle}>Pay With</Text>
+              <View style={styles.coinTypeRow}>
+                <TouchableOpacity
+                  style={[styles.coinTypeOption, coinType === 'paid' && styles.coinTypeOptionActive]}
+                  onPress={() => setCoinType('paid')}
+                >
+                  <View style={[styles.coinTypeDot, { backgroundColor: '#10B981' }]} />
+                  <Text style={[styles.coinTypeOptionText, coinType === 'paid' && { color: '#10B981', fontWeight: '700' }]}>Paid Coins</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.coinTypeOption, coinType === 'free' && styles.coinTypeOptionActiveFree]}
+                  onPress={() => setCoinType('free')}
+                >
+                  <View style={[styles.coinTypeDot, { backgroundColor: '#F59E0B' }]} />
+                  <Text style={[styles.coinTypeOptionText, coinType === 'free' && { color: '#92400E', fontWeight: '700' }]}>Free Coins</Text>
+                </TouchableOpacity>
+              </View>
+              {coinType === 'free' && (
+                <Text style={styles.coinTypeNote}>Free coin winnings cannot be withdrawn</Text>
+              )}
+            </View>
+          )}
+
           {/* Action Buttons */}
           {!activeTournament.isJoined && (activeTournament.status === 'upcoming' || activeTournament.status === 'live') && (
-            <TouchableOpacity 
-              style={[styles.joinButton, !canJoin.canJoin && styles.joinButtonDisabled]} 
+            <TouchableOpacity
+              style={[styles.joinButton, !canJoin.canJoin && styles.joinButtonDisabled]}
               onPress={handleJoinTournament}
               disabled={!canJoin.canJoin || joining}
             >
@@ -299,7 +326,7 @@ const TournamentDetailsScreen = () => {
                 <ActivityIndicator color={COLORS.white} />
               ) : (
                 <Text style={styles.joinButtonText}>
-                  {canJoin.canJoin ? 'Register for Tournament' : canJoin.reason || 'Cannot Join'}
+                  {canJoin.canJoin ? `Register with ${coinType === 'free' ? 'Free' : 'Paid'} Coins` : canJoin.reason || 'Cannot Join'}
                 </Text>
               )}
             </TouchableOpacity>
@@ -589,6 +616,57 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     color: COLORS.primary,
+  },
+  coinTypeSection: {
+    backgroundColor: COLORS.white,
+    borderRadius: 10,
+    padding: 14,
+    marginBottom: 12,
+  },
+  coinTypeSectionTitle: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#374151',
+    marginBottom: 10,
+  },
+  coinTypeRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  coinTypeOption: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    padding: 12,
+    borderRadius: 10,
+    borderWidth: 1.5,
+    borderColor: '#E5E7EB',
+    backgroundColor: '#F9FAFB',
+  },
+  coinTypeOptionActive: {
+    borderColor: '#10B981',
+    backgroundColor: '#F0FDF4',
+  },
+  coinTypeOptionActiveFree: {
+    borderColor: '#F59E0B',
+    backgroundColor: '#FFFBEB',
+  },
+  coinTypeDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+  },
+  coinTypeOptionText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#6B7280',
+  },
+  coinTypeNote: {
+    fontSize: 11,
+    color: '#92400E',
+    marginTop: 8,
+    textAlign: 'center',
   },
 });
 

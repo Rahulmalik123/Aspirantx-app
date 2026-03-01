@@ -22,6 +22,7 @@ const WalletScreen = () => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [balance, setBalance] = useState(user?.coins || 0);
+  const [freeBalance, setFreeBalance] = useState(0);
 
   useEffect(() => {
     fetchWalletData();
@@ -36,8 +37,10 @@ const WalletScreen = () => {
       ]);
 
       // Use coins from wallet response, fallback to user coins
-      if (walletRes?.data?.balance !== undefined) {
-        setBalance(walletRes.data.balance);
+      const walletData = walletRes?.data ?? walletRes;
+      if (walletData?.balance !== undefined) {
+        setBalance(walletData.balance);
+        setFreeBalance(walletData.freeBalance || 0);
       } else if (user?.coins !== undefined) {
         setBalance(user.coins);
       }
@@ -92,8 +95,21 @@ const WalletScreen = () => {
         >
           <View style={styles.content}>
             <View style={styles.balanceCard}>
-              <Text style={styles.balanceLabel}>Available Coins</Text>
-              <Text style={styles.balanceValue}>{balance} coins</Text>
+              <Text style={styles.balanceLabel}>Total Balance</Text>
+              <Text style={styles.balanceValue}>{balance + freeBalance} coins</Text>
+              <View style={styles.balanceBreakdown}>
+                <View style={styles.balanceItem}>
+                  <View style={[styles.coinDot, { backgroundColor: '#10B981' }]} />
+                  <Text style={styles.balanceItemLabel}>Paid</Text>
+                  <Text style={styles.balanceItemValue}>{balance}</Text>
+                </View>
+                <View style={styles.balanceDivider} />
+                <View style={styles.balanceItem}>
+                  <View style={[styles.coinDot, { backgroundColor: '#F59E0B' }]} />
+                  <Text style={styles.balanceItemLabel}>Free</Text>
+                  <Text style={styles.balanceItemValue}>{freeBalance}</Text>
+                </View>
+              </View>
               <TouchableOpacity
                 style={styles.rechargeButton}
                 onPress={() => navigation.navigate('Recharge')}
@@ -120,7 +136,14 @@ const WalletScreen = () => {
                       </Text>
                     </View>
                     <View style={styles.transactionContent}>
-                      <Text style={styles.transactionSource}>{txn.description || 'Transaction'}</Text>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                        <Text style={styles.transactionSource}>{txn.description || 'Transaction'}</Text>
+                        {txn.coinType === 'free' && (
+                          <View style={styles.freeBadge}>
+                            <Text style={styles.freeBadgeText}>FREE</Text>
+                          </View>
+                        )}
+                      </View>
                       <Text style={styles.transactionDate}>
                         {new Date(txn.createdAt).toLocaleDateString()}
                       </Text>
@@ -129,7 +152,7 @@ const WalletScreen = () => {
                       styles.transactionAmount,
                       { color: getTransactionColor(txn.type) }
                     ]}>
-                      {txn.type === 'credit' ? '+' : '-'}₹{txn.amount}
+                      {txn.type === 'credit' ? '+' : '-'}{txn.amount}
                     </Text>
                   </View>
                 ))
@@ -193,6 +216,40 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: COLORS.white,
     marginBottom: 20,
+  },
+  balanceBreakdown: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    borderRadius: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    marginBottom: 16,
+    gap: 16,
+  },
+  balanceItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  coinDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  balanceItemLabel: {
+    fontSize: 13,
+    color: '#E0E7FF',
+  },
+  balanceItemValue: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: COLORS.white,
+  },
+  balanceDivider: {
+    width: 1,
+    height: 20,
+    backgroundColor: 'rgba(255,255,255,0.3)',
   },
   rechargeButton: {
     backgroundColor: COLORS.white,
@@ -265,6 +322,17 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 15,
     color: '#6B7280',
+  },
+  freeBadge: {
+    backgroundColor: '#FEF3C7',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  freeBadgeText: {
+    fontSize: 9,
+    fontWeight: '700',
+    color: '#92400E',
   },
 });
 

@@ -54,7 +54,9 @@ const CreateBattleScreen = () => {
       : undefined;
 
   // State — battle settings
+  const [coinType, setCoinType] = useState<'paid' | 'free'>('paid');
   const [walletBalance, setWalletBalance] = useState<number | null>(null);
+  const [freeBalance, setFreeBalance] = useState<number | null>(null);
   const [loadingWallet, setLoadingWallet] = useState(true);
   const [allExams, setAllExams] = useState<ExamItem[]>([]);
   const [loadingExams, setLoadingExams] = useState(true);
@@ -79,15 +81,17 @@ const CreateBattleScreen = () => {
   const totalPool = fee * 2;
   const platformCut = Math.floor(totalPool * PLATFORM_CUT);
   const prizePool = totalPool - platformCut;
-  const hasEnoughCoins = walletBalance !== null && walletBalance >= fee;
+  const activeBalance = coinType === 'free' ? (freeBalance ?? 0) : (walletBalance ?? 0);
+  const hasEnoughCoins = activeBalance >= fee;
 
   useEffect(() => {
     walletService.getWallet()
       .then((data: any) => {
-        const balance = data?.data?.balance ?? data?.balance ?? 0;
-        setWalletBalance(balance);
+        const walletData = data?.data ?? data;
+        setWalletBalance(walletData?.balance ?? 0);
+        setFreeBalance(walletData?.freeBalance ?? 0);
       })
-      .catch(() => setWalletBalance(0))
+      .catch(() => { setWalletBalance(0); setFreeBalance(0); })
       .finally(() => setLoadingWallet(false));
   }, []);
 
@@ -134,7 +138,9 @@ const CreateBattleScreen = () => {
     if (!hasEnoughCoins) {
       Alert.alert(
         'Insufficient Coins',
-        `You need ${fee} coins but have only ${walletBalance}. Please recharge your wallet.`
+        coinType === 'free'
+          ? `You need ${fee} free coins but have only ${freeBalance ?? 0}. Earn more through referrals, daily login, or quizzes.`
+          : `You need ${fee} paid coins but have only ${walletBalance ?? 0}. Please recharge your wallet.`
       );
       return false;
     }
@@ -173,6 +179,7 @@ const CreateBattleScreen = () => {
         entryFee: fee,
         totalQuestions: questionsCount,
         difficulty,
+        coinType,
         inviteType,
         challengedUserId,
       });
@@ -231,27 +238,44 @@ const CreateBattleScreen = () => {
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
 
-        {/* Wallet Balance */}
-        <View style={[styles.card, styles.walletCard]}>
-          <View style={styles.walletRow}>
-            <View style={styles.walletLeft}>
-              <CustomIcon name="wallet-outline" size={18} color={COLORS.primary} />
-              <Text style={styles.walletLabel}>Your Balance</Text>
-            </View>
-            {loadingWallet ? (
-              <ActivityIndicator size="small" color={COLORS.primary} />
-            ) : (
-              <View style={styles.walletRight}>
-                <CustomIcon name="cash-outline" size={16} color="#F59E0B" />
-                <Text style={styles.walletBalance}> {walletBalance ?? 0}</Text>
-                <Text style={styles.walletUnit}> coins</Text>
+        {/* Coin Type Selector */}
+        <View style={styles.card}>
+          <Text style={styles.sectionTitle}>Play With</Text>
+          <Text style={styles.sectionSub}>Choose which coins to use for this battle</Text>
+          <View style={styles.coinTypeRow}>
+            <TouchableOpacity
+              style={[styles.coinTypeBtn, coinType === 'paid' && styles.coinTypeBtnActive]}
+              onPress={() => setCoinType('paid')}
+            >
+              <View style={[styles.coinTypeDot, { backgroundColor: '#10B981' }]} />
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.coinTypeLabel, coinType === 'paid' && styles.coinTypeLabelActive]}>Paid Coins</Text>
+                <Text style={styles.coinTypeSub}>Withdrawable winnings</Text>
               </View>
-            )}
+              {!loadingWallet && (
+                <Text style={[styles.coinTypeBal, coinType === 'paid' && styles.coinTypeBalActive]}>{walletBalance ?? 0}</Text>
+              )}
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.coinTypeBtn, coinType === 'free' && styles.coinTypeBtnActiveFree]}
+              onPress={() => setCoinType('free')}
+            >
+              <View style={[styles.coinTypeDot, { backgroundColor: '#F59E0B' }]} />
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.coinTypeLabel, coinType === 'free' && styles.coinTypeLabelActiveFree]}>Free Coins</Text>
+                <Text style={styles.coinTypeSub}>Cannot withdraw winnings</Text>
+              </View>
+              {!loadingWallet && (
+                <Text style={[styles.coinTypeBal, coinType === 'free' && styles.coinTypeBalActiveFree]}>{freeBalance ?? 0}</Text>
+              )}
+            </TouchableOpacity>
           </View>
-          {!hasEnoughCoins && fee > 0 && walletBalance !== null && (
+          {!hasEnoughCoins && fee > 0 && (
             <View style={styles.insufficientRow}>
               <CustomIcon name="warning-outline" size={13} color="#EF4444" />
-              <Text style={styles.insufficientText}> Need {fee - walletBalance} more coins</Text>
+              <Text style={styles.insufficientText}>
+                {' '}Need {fee - activeBalance} more {coinType} coins
+              </Text>
             </View>
           )}
         </View>
@@ -430,6 +454,12 @@ const CreateBattleScreen = () => {
               <Text style={styles.summaryLabel}>Difficulty</Text>
               <Text style={styles.summaryValue}>
                 {difficulty.charAt(0).toUpperCase() + difficulty.slice(1)}
+              </Text>
+            </View>
+            <View style={styles.summaryItem}>
+              <Text style={styles.summaryLabel}>Coin Type</Text>
+              <Text style={[styles.summaryValue, { color: coinType === 'free' ? '#F59E0B' : '#10B981' }]}>
+                {coinType === 'free' ? 'Free' : 'Paid'}
               </Text>
             </View>
             <View style={styles.summaryItem}>
@@ -612,6 +642,28 @@ const styles = StyleSheet.create({
   walletUnit: { fontSize: 13, color: '#6B7280', fontWeight: '500' },
   insufficientRow: { flexDirection: 'row', alignItems: 'center', marginTop: 8 },
   insufficientText: { fontSize: 12, color: '#EF4444', fontWeight: '500' },
+
+  coinTypeRow: { gap: 8 },
+  coinTypeBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    padding: 14,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: '#E5E7EB',
+    backgroundColor: '#F9FAFB',
+  },
+  coinTypeBtnActive: { borderColor: '#10B981', backgroundColor: '#F0FDF4' },
+  coinTypeBtnActiveFree: { borderColor: '#F59E0B', backgroundColor: '#FFFBEB' },
+  coinTypeDot: { width: 10, height: 10, borderRadius: 5 },
+  coinTypeLabel: { fontSize: 14, fontWeight: '600', color: '#6B7280' },
+  coinTypeLabelActive: { color: '#10B981' },
+  coinTypeLabelActiveFree: { color: '#92400E' },
+  coinTypeSub: { fontSize: 11, color: '#9CA3AF', marginTop: 1 },
+  coinTypeBal: { fontSize: 18, fontWeight: '800', color: '#9CA3AF' },
+  coinTypeBalActive: { color: '#10B981' },
+  coinTypeBalActiveFree: { color: '#F59E0B' },
 
   chipScroll: { gap: 8, paddingVertical: 2 },
   chip: {

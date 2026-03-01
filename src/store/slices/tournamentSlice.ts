@@ -73,10 +73,10 @@ export const fetchTournamentLeaderboard = createAsyncThunk(
 // 4. Join tournament (Auth Required)
 export const joinTournament = createAsyncThunk(
   'tournament/join',
-  async (tournamentId: string, { rejectWithValue }) => {
+  async (params: { tournamentId: string; coinType?: 'paid' | 'free' }, { rejectWithValue }) => {
     try {
-      const response = await tournamentService.joinTournament(tournamentId);
-      return { ...response, tournamentId };
+      const response = await tournamentService.joinTournament(params.tournamentId, params.coinType);
+      return { ...response, tournamentId: params.tournamentId };
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || error.message);
     }

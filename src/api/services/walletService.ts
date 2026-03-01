@@ -2,16 +2,22 @@ import apiClient from '../client';
 import { ENDPOINTS } from '../endpoints';
 
 export interface WalletData {
-  balance: number;
+  balance: number;          // Paid coins (withdrawable)
+  freeBalance: number;      // Free/bonus coins (battles/tournaments only)
+  totalBalance: number;
   totalEarnings: number;
   totalSpent: number;
+  totalFreeEarned: number;
+  totalFreeSpent: number;
 }
 
 export interface Transaction {
   _id: string;
   type: 'credit' | 'debit';
   amount: number;
+  coinType: 'paid' | 'free';
   description: string;
+  source?: string;
   status: 'pending' | 'completed' | 'failed';
   createdAt: Date;
 }
