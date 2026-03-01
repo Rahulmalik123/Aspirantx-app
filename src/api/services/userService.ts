@@ -123,7 +123,7 @@ class UserService {
   async getLeaderboard(params?: {
     page?: number;
     limit?: number;
-    type?: 'global' | 'exam';
+    type?: 'global' | 'exam' | 'friends';
     examId?: string;
   }): Promise<LeaderboardResponse> {
     const queryParams = new URLSearchParams();

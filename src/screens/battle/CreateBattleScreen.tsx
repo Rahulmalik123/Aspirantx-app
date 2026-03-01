@@ -313,7 +313,7 @@ const CreateBattleScreen = () => {
         {/* Entry Fee */}
         <View style={styles.card}>
           <Text style={styles.sectionTitle}>Entry Fee</Text>
-          <Text style={styles.sectionSub}>Coins deducted from your wallet</Text>
+          <Text style={styles.sectionSub}>Both players will be charged when opponent joins</Text>
           <View style={styles.feeChips}>
             {PRESET_FEES.map((f) => (
               <TouchableOpacity

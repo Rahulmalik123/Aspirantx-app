@@ -5,7 +5,6 @@ import {
   StyleSheet,
   FlatList,
   TouchableOpacity,
-  StatusBar,
   Image,
   ActivityIndicator,
   RefreshControl,
@@ -42,26 +41,18 @@ const LeaderboardScreen = () => {
       const response: any = await userService.getLeaderboard({
         page: refresh ? 1 : page,
         limit: 20,
-        type: 'global',
+        type: selectedTab,
       });
 
-      console.log('📊 Leaderboard response:', response);
-
-      // Response structure: { success, message, data: { data, currentUser, pagination } }
       const leaderboardList = response?.data?.data || response?.data || [];
       const currentUserData = response?.data?.currentUser || null;
       const paginationData = response?.data?.pagination || {};
 
-      if (refresh) {
-        setLeaderboardData(leaderboardList);
-      } else {
-        setLeaderboardData(leaderboardList);
-      }
-
+      setLeaderboardData(leaderboardList);
       setCurrentUser(currentUserData);
       setHasMore(paginationData.hasNextPage !== false);
     } catch (error) {
-      console.error('❌ Failed to fetch leaderboard:', error);
+      console.error('Failed to fetch leaderboard:', error);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -76,7 +67,7 @@ const LeaderboardScreen = () => {
       const response: any = await userService.getLeaderboard({
         page: nextPage,
         limit: 20,
-        type: 'global',
+        type: selectedTab,
       });
 
       const leaderboardList = response?.data?.data || response?.data || [];
@@ -90,69 +81,99 @@ const LeaderboardScreen = () => {
         setHasMore(false);
       }
     } catch (error) {
-      console.error('❌ Failed to load more:', error);
+      console.error('Failed to load more:', error);
     }
   };
 
-  const onRefresh = () => {
-    fetchLeaderboard(true);
+  const getRankIcon = (rank: number) => {
+    if (rank === 1) return { color: '#F59E0B', bg: '#FEF3C7' };
+    if (rank === 2) return { color: '#9CA3AF', bg: '#F3F4F6' };
+    if (rank === 3) return { color: '#D97706', bg: '#FEF3C7' };
+    return null;
   };
 
-  const getRankBadgeColor = (rank: number) => {
-    if (rank === 1) return '#FFD700';
-    if (rank === 2) return '#C0C0C0';
-    if (rank === 3) return '#CD7F32';
-    return COLORS.primary;
-  };
+  const renderTopThree = () => {
+    const top3 = leaderboardData.filter(u => u.rank <= 3);
+    if (top3.length === 0) return null;
 
-  const renderLeaderboardItem = ({ item }: { item: LeaderboardUser }) => (
-    <View style={styles.leaderboardItem}>
-      <View style={styles.rankContainer}>
-        {item.rank <= 3 ? (
-          <View style={[styles.crownBadge, { backgroundColor: getRankBadgeColor(item.rank) + '20' }]}>
-            <Icon name="trophy" size={20} color={getRankBadgeColor(item.rank)} />
-          </View>
-        ) : (
-          <View style={styles.rankNumber}>
-            <Text style={styles.rankText}>{item.rank}</Text>
-          </View>
-        )}
+    // Reorder: 2nd, 1st, 3rd
+    const ordered = [
+      top3.find(u => u.rank === 2),
+      top3.find(u => u.rank === 1),
+      top3.find(u => u.rank === 3),
+    ].filter(Boolean) as LeaderboardUser[];
+
+    return (
+      <View style={styles.podiumContainer}>
+        {ordered.map((user) => {
+          const isFirst = user.rank === 1;
+          return (
+            <View key={user._id} style={[styles.podiumItem, isFirst && styles.podiumItemFirst]}>
+              <View style={[styles.podiumAvatarWrap, isFirst && styles.podiumAvatarWrapFirst]}>
+                {isFirst && (
+                  <View style={styles.crownWrap}>
+                    <Text style={styles.crownEmoji}>👑</Text>
+                  </View>
+                )}
+                {user.avatar ? (
+                  <Image source={{ uri: user.avatar }} style={[styles.podiumAvatar, isFirst && styles.podiumAvatarFirst]} />
+                ) : (
+                  <View style={[styles.podiumAvatarFallback, isFirst && styles.podiumAvatarFirst]}>
+                    <Text style={[styles.podiumAvatarText, isFirst && { fontSize: 16 }]}>{user.name.charAt(0).toUpperCase()}</Text>
+                  </View>
+                )}
+              </View>
+              <Text style={[styles.podiumName, isFirst && styles.podiumNameFirst]} numberOfLines={1}>{user.name}</Text>
+              <Text style={styles.podiumXP}>{user.experience || 0} XP</Text>
+              <View style={[styles.podiumRankBadge, { backgroundColor: getRankIcon(user.rank)?.bg }]}>
+                <Text style={[styles.podiumRankText, { color: getRankIcon(user.rank)?.color }]}>#{user.rank}</Text>
+              </View>
+            </View>
+          );
+        })}
       </View>
+    );
+  };
 
-      <View style={styles.userAvatar}>
+  const renderLeaderboardItem = ({ item }: { item: LeaderboardUser }) => {
+    if (item.rank <= 3) return null; // Top 3 shown in podium
+
+    return (
+      <View style={styles.listItem}>
+        <Text style={styles.listRank}>{item.rank}</Text>
+
         {item.avatar ? (
-          <Image source={{ uri: item.avatar }} style={styles.avatarImage} />
+          <Image source={{ uri: item.avatar }} style={styles.listAvatar} />
         ) : (
-          <View style={styles.avatarPlaceholder}>
-            <Text style={styles.avatarText}>{item.name.charAt(0).toUpperCase()}</Text>
+          <View style={styles.listAvatarFallback}>
+            <Text style={styles.listAvatarText}>{item.name.charAt(0).toUpperCase()}</Text>
           </View>
         )}
-      </View>
 
-      <View style={styles.userInfo}>
-        <Text style={styles.userName} numberOfLines={1}>{item.name}</Text>
-        <View style={styles.statsRow}>
-          <Text style={styles.levelBadge}>Lv {item.level || 1}</Text>
-          <Text style={styles.points}>{item.experience || 0} XP</Text>
+        <View style={styles.listInfo}>
+          <Text style={styles.listName} numberOfLines={1}>{item.name}</Text>
+          <Text style={styles.listMeta}>Lv {item.level || 1}</Text>
+        </View>
+
+        <View style={styles.listRight}>
+          {item.currentStreak > 0 && (
+            <View style={styles.streakPill}>
+              <Icon name="flame" size={10} color="#FF6B35" />
+              <Text style={styles.streakNum}>{item.currentStreak}</Text>
+            </View>
+          )}
+          <Text style={styles.listXP}>{item.experience || 0} XP</Text>
         </View>
       </View>
-
-      {item.currentStreak > 0 && (
-        <View style={styles.streakBadge}>
-          <Icon name="flame" size={14} color="#FF6B35" />
-          <Text style={styles.streakText}>{item.currentStreak}</Text>
-        </View>
-      )}
-    </View>
-  );
+    );
+  };
 
   if (loading && !refreshing) {
     return (
       <View style={styles.container}>
         <Header title="Leaderboard" onBackPress={() => navigation.goBack()} />
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={COLORS.primary} />
-          <Text style={styles.loadingText}>Loading leaderboard...</Text>
+          <ActivityIndicator size="small" color={COLORS.primary} />
         </View>
       </View>
     );
@@ -160,70 +181,40 @@ const LeaderboardScreen = () => {
 
   return (
     <View style={styles.container}>
-      <Header 
-        title="Leaderboard" 
-        onBackPress={() => navigation.goBack()}
-        rightComponent={
-          <TouchableOpacity>
-            <Icon name="filter-outline" size={24} color={COLORS.primary} />
-          </TouchableOpacity>
-        }
-      />
+      <Header title="Leaderboard" onBackPress={() => navigation.goBack()} />
 
       {/* Tabs */}
-      <View style={styles.tabsContainer}>
+      <View style={styles.tabsRow}>
         <TouchableOpacity
           style={[styles.tab, selectedTab === 'global' && styles.tabActive]}
           onPress={() => setSelectedTab('global')}
         >
-          <Icon name="globe-outline" size={20} color={selectedTab === 'global' ? COLORS.white : '#6B7280'} />
-          <Text style={[styles.tabText, selectedTab === 'global' && styles.tabTextActive]}>
-            Global
-          </Text>
+          <Text style={[styles.tabLabel, selectedTab === 'global' && styles.tabLabelActive]}>Global</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.tab, selectedTab === 'friends' && styles.tabActive]}
           onPress={() => setSelectedTab('friends')}
-          disabled
         >
-          <Icon name="people-outline" size={20} color={selectedTab === 'friends' ? COLORS.white : '#6B7280'} />
-          <Text style={[styles.tabText, selectedTab === 'friends' && styles.tabTextActive]}>
-            Friends (Soon)
-          </Text>
+          <Text style={[styles.tabLabel, selectedTab === 'friends' && styles.tabLabelActive]}>Friends</Text>
         </TouchableOpacity>
       </View>
 
-      {/* Current User Position */}
-      {currentUser ? (
-        <View style={styles.currentUserCard}>
-          <View style={styles.currentUserLeft}>
-            <Text style={styles.currentUserRank}>#{currentUser.rank || '?'}</Text>
-            <View style={styles.userAvatar}>
-              {currentUser.avatar ? (
-                <Image source={{ uri: currentUser.avatar }} style={styles.avatarImageSmall} />
-              ) : (
-                <View style={styles.avatarPlaceholderSmall}>
-                  <Text style={styles.avatarTextSmall}>{currentUser.name?.charAt(0)?.toUpperCase() || 'U'}</Text>
-                </View>
-              )}
-            </View>
-            <View>
-              <Text style={styles.currentUserName}>You</Text>
-              <Text style={styles.currentUserPoints}>Lv {currentUser.level || 1} · {currentUser.experience || 0} XP</Text>
-            </View>
+      {/* Current User Strip */}
+      {currentUser && (
+        <View style={styles.myRankStrip}>
+          <Text style={styles.myRankLabel}>Your Rank</Text>
+          <View style={styles.myRankRight}>
+            <Text style={styles.myRankValue}>#{currentUser.rank || '-'}</Text>
+            <View style={styles.myRankDot} />
+            <Text style={styles.myRankXP}>{currentUser.experience || 0} XP</Text>
           </View>
-          <View style={styles.currentUserRight}>
-            <Text style={styles.levelBadgeLarge}>Lv {currentUser.level || 1}</Text>
-          </View>
-        </View>
-      ) : (
-        <View style={styles.infoCard}>
-          <Icon name="information-circle-outline" size={20} color={COLORS.primary} />
-          <Text style={styles.infoText}>Start practicing to appear on the leaderboard!</Text>
         </View>
       )}
 
-      {/* Leaderboard List */}
+      {/* Top 3 Podium */}
+      {renderTopThree()}
+
+      {/* Rest of list */}
       <FlatList
         data={leaderboardData}
         keyExtractor={(item, index) => item._id || index.toString()}
@@ -231,21 +222,19 @@ const LeaderboardScreen = () => {
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[COLORS.primary]} />
+          <RefreshControl refreshing={refreshing} onRefresh={() => fetchLeaderboard(true)} colors={[COLORS.primary]} />
         }
         onEndReached={loadMore}
         onEndReachedThreshold={0.5}
         ListEmptyComponent={
-          <View style={styles.emptyContainer}>
-            <Icon name="trophy-outline" size={64} color="#D1D5DB" />
-            <Text style={styles.emptyText}>No leaderboard data yet</Text>
+          <View style={styles.emptyWrap}>
+            <Icon name="trophy-outline" size={48} color="#D1D5DB" />
+            <Text style={styles.emptyText}>No data yet</Text>
           </View>
         }
         ListFooterComponent={
           hasMore && leaderboardData.length > 0 ? (
-            <View style={styles.footerLoader}>
-              <ActivityIndicator size="small" color={COLORS.primary} />
-            </View>
+            <ActivityIndicator size="small" color={COLORS.primary} style={{ paddingVertical: 16 }} />
           ) : null
         }
       />
@@ -263,261 +252,259 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  loadingText: {
-    marginTop: 12,
-    fontSize: 14,
-    color: '#6B7280',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    backgroundColor: COLORS.white,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
-  },
-  backButton: {
-    width: 40,
-    height: 40,
-    justifyContent: 'center',
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#1F2937',
-  },
-  tabsContainer: {
+
+  // --- Tabs ---
+  tabsRow: {
     flexDirection: 'row',
     backgroundColor: COLORS.white,
-    paddingHorizontal: 20,
-    paddingBottom: 16,
-    gap: 12,
+    paddingHorizontal: 16,
+    paddingBottom: 12,
+    gap: 8,
   },
   tab: {
     flex: 1,
-    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 10,
+    paddingVertical: 7,
     borderRadius: 8,
     backgroundColor: '#F3F4F6',
-    gap: 8,
   },
   tabActive: {
     backgroundColor: COLORS.primary,
   },
-  tabText: {
-    fontSize: 14,
+  tabLabel: {
+    fontSize: 13,
     fontWeight: '600',
     color: '#6B7280',
   },
-  tabTextActive: {
+  tabLabelActive: {
     color: COLORS.white,
   },
-  currentUserCard: {
+
+  // --- My Rank Strip ---
+  myRankStrip: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: COLORS.primary + '10',
-    marginHorizontal: 20,
-    marginTop: 16,
-    marginBottom: 12,
-    padding: 14,
-    borderRadius: 12,
-    borderWidth: 1.5,
-    borderColor: COLORS.primary,
-  },
-  currentUserLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    flex: 1,
-  },
-  currentUserRight: {
-    marginLeft: 8,
-  },
-  infoCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    backgroundColor: COLORS.primary + '10',
-    marginHorizontal: 20,
-    marginTop: 16,
-    marginBottom: 12,
-    padding: 14,
-    borderRadius: 12,
+    marginHorizontal: 16,
+    marginTop: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    backgroundColor: COLORS.primary + '0A',
+    borderRadius: 10,
     borderWidth: 1,
-    borderColor: COLORS.primary + '30',
+    borderColor: COLORS.primary + '20',
   },
-  infoText: {
-    flex: 1,
-    fontSize: 13,
-    fontWeight: '600',
-    color: COLORS.primary,
-  },
-  currentUserRank: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: COLORS.primary,
-    minWidth: 40,
-  },
-  currentUserName: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: '#1F2937',
-    marginBottom: 2,
-  },
-  currentUserPoints: {
+  myRankLabel: {
     fontSize: 12,
     fontWeight: '600',
     color: '#6B7280',
   },
-  levelBadgeLarge: {
+  myRankRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  myRankValue: {
     fontSize: 14,
     fontWeight: '700',
     color: COLORS.primary,
-    backgroundColor: COLORS.white,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 12,
   },
-  listContent: {
-    paddingHorizontal: 20,
-    paddingBottom: 20,
+  myRankDot: {
+    width: 3,
+    height: 3,
+    borderRadius: 1.5,
+    backgroundColor: '#D1D5DB',
   },
-  leaderboardItem: {
+  myRankXP: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#6B7280',
+  },
+
+  // --- Podium ---
+  podiumContainer: {
     flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'flex-end',
+    paddingHorizontal: 16,
+    paddingTop: 20,
+    paddingBottom: 16,
+    gap: 12,
+  },
+  podiumItem: {
+    flex: 1,
     alignItems: 'center',
     backgroundColor: COLORS.white,
     borderRadius: 12,
-    padding: 14,
+    paddingVertical: 14,
+    paddingHorizontal: 6,
+  },
+  podiumItemFirst: {
+    paddingVertical: 18,
+    shadowColor: COLORS.primary,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  podiumAvatarWrap: {
+    marginBottom: 8,
+    position: 'relative',
+  },
+  podiumAvatarWrapFirst: {
     marginBottom: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 3,
-    elevation: 2,
   },
-  rankContainer: {
-    width: 36,
-    alignItems: 'center',
-    marginRight: 10,
+  crownWrap: {
+    position: 'absolute',
+    top: -14,
+    alignSelf: 'center',
+    zIndex: 1,
+    left: '50%',
+    marginLeft: -8,
   },
-  crownBadge: {
+  crownEmoji: {
+    fontSize: 16,
+  },
+  podiumAvatar: {
     width: 36,
     height: 36,
     borderRadius: 18,
-    justifyContent: 'center',
-    alignItems: 'center',
   },
-  rankNumber: {
+  podiumAvatarFirst: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+  },
+  podiumAvatarFallback: {
     width: 36,
     height: 36,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  rankText: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: '#6B7280',
-  },
-  userAvatar: {
-    marginRight: 10,
-  },
-  avatarImage: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-  },
-  avatarImageSmall: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-  },
-  avatarPlaceholder: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: COLORS.primary + '20',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  avatarPlaceholderSmall: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: COLORS.primary + '20',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  avatarText: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: COLORS.primary,
-  },
-  avatarTextSmall: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: COLORS.primary,
-  },
-  userInfo: {
-    flex: 1,
-  },
-  userName: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#1F2937',
-    marginBottom: 4,
-  },
-  statsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  points: {
-    fontSize: 12,
-    color: '#6B7280',
-    fontWeight: '500',
-  },
-  levelBadge: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: COLORS.primary,
+    borderRadius: 18,
     backgroundColor: COLORS.primary + '15',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  podiumAvatarText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: COLORS.primary,
+  },
+  podiumName: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#374151',
+    marginBottom: 2,
+    maxWidth: 80,
+    textAlign: 'center',
+  },
+  podiumNameFirst: {
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  podiumXP: {
+    fontSize: 10,
+    fontWeight: '500',
+    color: '#9CA3AF',
+    marginBottom: 6,
+  },
+  podiumRankBadge: {
     paddingHorizontal: 8,
     paddingVertical: 2,
-    borderRadius: 8,
+    borderRadius: 6,
   },
-  streakBadge: {
+  podiumRankText: {
+    fontSize: 11,
+    fontWeight: '700',
+  },
+
+  // --- List Items ---
+  listContent: {
+    paddingHorizontal: 16,
+    paddingBottom: 16,
+  },
+  listItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 3,
-    backgroundColor: '#FFF4ED',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
+    backgroundColor: COLORS.white,
+    borderRadius: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    marginBottom: 6,
+  },
+  listRank: {
+    width: 24,
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#9CA3AF',
+    textAlign: 'center',
+  },
+  listAvatar: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     marginLeft: 8,
   },
-  streakText: {
+  listAvatarFallback: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: COLORS.primary + '12',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: 8,
+  },
+  listAvatarText: {
     fontSize: 12,
+    fontWeight: '700',
+    color: COLORS.primary,
+  },
+  listInfo: {
+    flex: 1,
+    marginLeft: 10,
+  },
+  listName: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#1F2937',
+  },
+  listMeta: {
+    fontSize: 11,
+    color: '#9CA3AF',
+    fontWeight: '500',
+    marginTop: 1,
+  },
+  listRight: {
+    alignItems: 'flex-end',
+    gap: 3,
+  },
+  streakPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 2,
+    backgroundColor: '#FFF4ED',
+    paddingHorizontal: 5,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  streakNum: {
+    fontSize: 10,
     fontWeight: '700',
     color: '#FF6B35',
   },
-  emptyContainer: {
-    paddingVertical: 60,
+  listXP: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#6B7280',
+  },
+
+  // --- Empty ---
+  emptyWrap: {
+    paddingVertical: 48,
     alignItems: 'center',
   },
   emptyText: {
-    marginTop: 16,
-    fontSize: 15,
+    marginTop: 10,
+    fontSize: 13,
     color: '#9CA3AF',
-    fontWeight: '500',
-  },
-  footerLoader: {
-    paddingVertical: 20,
-    alignItems: 'center',
   },
 });
 

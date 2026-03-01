@@ -13,6 +13,7 @@ import { RootStackParamList } from '../../navigation/MainNavigator';
 import { COLORS } from '../../constants/colors';
 import battleService, { Battle, BattleQuestion } from '../../api/services/battleService';
 import CustomIcon from '../../components/CustomIcon';
+import { showErrorToast } from '../../utils/toast';
 
 type Props = {
   route: RouteProp<RootStackParamList, 'LiveBattle'>;
@@ -76,6 +77,13 @@ const LiveBattleScreen: React.FC<Props> = ({ route, navigation }) => {
       setBattle(data);
       if (data.status === 'completed') {
         navigation.replace('BattleResult', { battleId });
+        return;
+      }
+      if (data.status === 'cancelled') {
+        if (pollRef.current) clearInterval(pollRef.current);
+        if (timerRef.current) clearInterval(timerRef.current);
+        showErrorToast('Battle has been cancelled or expired');
+        navigation.replace('BattleList');
         return;
       }
       // On first load, resume from where user left off

@@ -268,13 +268,13 @@ const ProfileScreen = () => {
           badge: `${user?.coins || 0} coins`,
           showArrow: true,
         },
-        { 
-          id: 'coins',
-          label: 'Earn Coins', 
-          icon: 'gift-outline', 
-          onPress: () => navigation.navigate('EarnCoins'),
-          showArrow: true,
-        },
+        // { 
+        //   id: 'coins',
+        //   label: 'Earn Coins', 
+        //   icon: 'gift-outline', 
+        //   onPress: () => navigation.navigate('EarnCoins'),
+        //   showArrow: true,
+        // },
         { 
           id: 'referral',
           label: 'Refer & Earn', 
