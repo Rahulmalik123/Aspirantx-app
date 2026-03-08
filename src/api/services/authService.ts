@@ -1,3 +1,4 @@
+import { OTPWidget } from '@msg91comm/sendotp-react-native';
 import { api } from '../client';
 import { ENDPOINTS } from '../endpoints';
 
@@ -22,12 +23,14 @@ export interface SendOTPRequest {
 export interface VerifyOTPRequest {
   phone: string;
   otp: string;
+  reqId: string;
   purpose: 'login' | 'registration' | 'forgot-password' | 'phone-verification';
 }
 
 export interface ResendOTPRequest {
   phone: string;
-  type: 'email' | 'phone';
+  reqId: string;
+  retryChannel?: number;
   purpose: 'login' | 'registration' | 'forgot-password' | 'phone-verification';
 }
 
@@ -84,30 +87,75 @@ export interface OTPResponse {
 }
 
 class AuthService {
-  async sendOTP(data: SendOTPRequest): Promise<OTPResponse> {
-    console.log('🌐 [AuthService] sendOTP called:', ENDPOINTS.SEND_OTP_PHONE, data);
-    const response = await api.post<OTPResponse>(ENDPOINTS.SEND_OTP_PHONE, data);
-    console.log('🌐 [AuthService] sendOTP response:', response);
-    return response;
-  }
+  // Send OTP via MSG91 Widget SDK
+  async sendOTP(data: SendOTPRequest): Promise<OTPResponse & { reqId?: string }> {
+    console.log('🌐 [AuthService] sendOTP via MSG91:', data);
+    // MSG91 expects identifier without '+' e.g. '91XXXXXXXXXX'
+    const identifier = data.phone.replace('+', '');
+    const response = await OTPWidget.sendOTP({ identifier });
+    console.log('🌐 [AuthService] MSG91 sendOTP response:', response);
 
-  async verifyOTP(data: VerifyOTPRequest): Promise<AuthResponse> {
-    console.log('🌐 [AuthService] verifyOTP called:', ENDPOINTS.VERIFY_OTP_PHONE, data);
-    const response = await api.post<AuthResponse>(ENDPOINTS.VERIFY_OTP_PHONE, data);
-    console.log('🌐 [AuthService] verifyOTP response:', response);
-    return response;
-  }
-
-  async resendOTP(data: ResendOTPRequest): Promise<OTPResponse> {
-    console.log('🌐 [AuthService] resendOTP called:', ENDPOINTS.RESEND_OTP_API, data);
-    const payload = {
-      identifier: data.phone,
-      type: data.type,
-      purpose: data.purpose,
+    if (response?.type === 'success') {
+      // MSG91 returns reqId in the message field
+      const reqId = response.reqId || response.message;
+      return {
+        success: true,
+        message: 'OTP sent successfully',
+        data: { reqId },
+      };
+    }
+    return {
+      success: false,
+      message: response?.message || 'Failed to send OTP',
     };
-    const response = await api.post<OTPResponse>(ENDPOINTS.RESEND_OTP_API, payload);
-    console.log('🌐 [AuthService] resendOTP response:', response);
+  }
+
+  // Verify OTP via MSG91, then authenticate with backend
+  async verifyOTP(data: VerifyOTPRequest): Promise<AuthResponse> {
+    console.log('🌐 [AuthService] verifyOTP via MSG91:', data);
+
+    // Step 1: Verify OTP with MSG91
+    const msg91Response = await OTPWidget.verifyOTP({
+      reqId: data.reqId,
+      otp: data.otp,
+    });
+    console.log('🌐 [AuthService] MSG91 verifyOTP response:', msg91Response);
+
+    if (msg91Response?.type !== 'success') {
+      throw new Error(msg91Response?.message || 'Invalid OTP');
+    }
+
+    // Step 2: Call backend with MSG91 token for server-side verification
+    const response = await api.post<AuthResponse>(ENDPOINTS.VERIFY_OTP_PHONE, {
+      phone: data.phone,
+      purpose: data.purpose,
+      msg91Verified: true,
+      msg91Token: msg91Response?.token || msg91Response?.message,
+    });
+    console.log('🌐 [AuthService] Backend verify response:', response);
     return response;
+  }
+
+  // Resend/Retry OTP via MSG91 Widget SDK
+  async resendOTP(data: ResendOTPRequest): Promise<OTPResponse> {
+    console.log('🌐 [AuthService] retryOTP via MSG91:', data);
+    const body: any = { reqId: data.reqId };
+    if (data.retryChannel) {
+      body.retryChannel = data.retryChannel;
+    }
+    const response = await OTPWidget.retryOTP(body);
+    console.log('🌐 [AuthService] MSG91 retryOTP response:', response);
+
+    if (response?.type === 'success') {
+      return {
+        success: true,
+        message: response.message || 'OTP resent successfully',
+      };
+    }
+    return {
+      success: false,
+      message: response?.message || 'Failed to resend OTP',
+    };
   }
 
   async updateProfile(data: UpdateProfileRequest): Promise<{ success: boolean; data: { user: any }; message: string }> {

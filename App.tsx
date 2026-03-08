@@ -5,6 +5,7 @@ import { NavigationContainer, NavigationContainerRef } from '@react-navigation/n
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import Toast from 'react-native-toast-message';
+import { OTPWidget } from '@msg91comm/sendotp-react-native';
 
 import store, { AppDispatch, RootState } from './src/store';
 import AppNavigator from './src/navigation/AppNavigator';
@@ -14,6 +15,10 @@ import { checkAuth, logout } from './src/store/slices/authSlice';
 import { requestStoragePermissions } from './src/utils/permissions.utils';
 import { setLogoutCallback } from './src/api/client';
 import notificationService from './src/services/notificationService';
+
+// MSG91 OTP Widget credentials
+const MSG91_WIDGET_ID = '366368657837343135373331';
+const MSG91_TOKEN_AUTH = '498807TJIQ9ON90k69ad0879P1';
 
 // Navigate to the right screen based on notification data
 const handleNotificationNavigation = (
@@ -94,6 +99,10 @@ function AppContent() {
   }, [dispatch]);
 
   useEffect(() => {
+    // Initialize MSG91 OTP Widget
+    OTPWidget.initializeWidget(MSG91_WIDGET_ID, MSG91_TOKEN_AUTH);
+    console.log('✅ [App] MSG91 OTP Widget initialized');
+
     const initAuth = async () => {
       try {
         await requestStoragePermissions();

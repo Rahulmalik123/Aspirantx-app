@@ -121,7 +121,8 @@ const RegisterScreen = () => {
       if (result.success) {
         navigation.navigate(ROUTES.OTP, {
           phone: `+91${phone}`,
-          purpose: 'registration'
+          purpose: 'registration',
+          reqId: result.data?.reqId,
         });
       } else {
         setError(result.message || 'Failed to send OTP');

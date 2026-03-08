@@ -8,9 +8,7 @@ import {
   FlatList,
   RefreshControl,
 } from 'react-native';
-import { useNavigation, useRoute } from '@react-navigation/native';
-import { useSelector } from 'react-redux';
-import { RootState } from '../../store';
+import { useNavigation } from '@react-navigation/native';
 import CustomIcon from '../../components/CustomIcon';
 import { COLORS } from '../../constants/colors';
 import practiceService from '../../api/services/practiceService';
@@ -18,27 +16,33 @@ import Header from '../../components/common/Header';
 
 interface DailyQuiz {
   _id: string;
-  assignedDate: string;
+  date: string;
   totalQuestions: number;
   status: 'pending' | 'in_progress' | 'completed';
-  score: number;
-  accuracy: number;
+  score?: number;
+  accuracy?: number;
+  exam?: {
+    _id: string;
+    name: string;
+    examCode: string;
+  };
   subject?: {
     _id: string;
     name: string;
+    icon?: string;
   };
   questionBank?: {
     _id: string;
     name: string;
+    examNames?: string[];
+    subjectName?: string;
+    dailyQuestionCount?: number;
   };
 }
 
 const DailyPracticeScreen = () => {
   const navigation = useNavigation<any>();
-  const route = useRoute<any>();
-  const { user } = useSelector((state: RootState) => state.auth);
-  const { examId } = route.params || {};
-  
+
   const [quizzes, setQuizzes] = useState<DailyQuiz[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -49,11 +53,7 @@ const DailyPracticeScreen = () => {
 
   const fetchDailyQuizzes = async () => {
     try {
-      // Fetch only today's pending/in_progress quizzes
       const response = await practiceService.getTodayQuizzes();
-      console.log('📚 Today\'s quizzes response:', response);
-      console.log('📚 Quizzes array:', response.data?.quizzes);
-      console.log('📚 Quizzes length:', response.data?.quizzes?.length);
       setQuizzes(response.data?.quizzes || []);
     } catch (error) {
       console.error('Failed to fetch today\'s quizzes:', error);
@@ -68,15 +68,13 @@ const DailyPracticeScreen = () => {
     fetchDailyQuizzes();
   };
 
-  const handleStartQuiz = async (quiz: DailyQuiz) => {
+  const handleStartQuiz = (quiz: DailyQuiz) => {
     if (quiz.status === 'completed') {
-      // Navigate to result screen
       navigation.navigate('QuizAttempt', {
         quizId: quiz._id,
         isReview: true,
       });
     } else {
-      // Start or resume quiz
       navigation.navigate('QuizAttempt', {
         quizId: quiz._id,
         isReview: false,
@@ -91,7 +89,7 @@ const DailyPracticeScreen = () => {
       case 'in_progress':
         return '#F59E0B';
       default:
-        return '#0040a1';
+        return COLORS.primary;
     }
   };
 
@@ -106,6 +104,17 @@ const DailyPracticeScreen = () => {
     }
   };
 
+  const getActionText = (status: string) => {
+    switch (status) {
+      case 'completed':
+        return 'View Results';
+      case 'in_progress':
+        return 'Resume Quiz';
+      default:
+        return 'Start Quiz';
+    }
+  };
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     const today = new Date();
@@ -117,69 +126,89 @@ const DailyPracticeScreen = () => {
     } else if (date.toDateString() === yesterday.toDateString()) {
       return 'Yesterday';
     } else {
-      return date.toLocaleDateString('en-US', { 
-        month: 'short', 
+      return date.toLocaleDateString('en-IN', {
         day: 'numeric',
-        year: date.getFullYear() !== today.getFullYear() ? 'numeric' : undefined
+        month: 'short',
+        year: date.getFullYear() !== today.getFullYear() ? 'numeric' : undefined,
       });
     }
   };
 
-  const renderQuizCard = ({ item }: { item: DailyQuiz }) => (
-    <TouchableOpacity
-      style={styles.quizCard}
-      onPress={() => handleStartQuiz(item)}
-      activeOpacity={0.7}
-    >
-      <View style={styles.quizHeader}>
-        <View style={styles.quizLeft}>
-          <View style={[styles.statusDot, { backgroundColor: getStatusColor(item.status) }]} />
-          <View>
-            <Text style={styles.quizTitle}>
-              {item.questionBank?.name || item.subject?.name || 'Daily Practice'}
+  const renderQuizCard = ({ item }: { item: DailyQuiz }) => {
+    const statusColor = getStatusColor(item.status);
+
+    return (
+      <TouchableOpacity
+        style={styles.card}
+        onPress={() => handleStartQuiz(item)}
+        activeOpacity={0.6}
+      >
+        {/* Top Row: Icon + Title + Status Badge */}
+        <View style={styles.cardHeader}>
+          <View style={[styles.iconBox, { backgroundColor: statusColor + '15' }]}>
+            <Text style={styles.iconEmoji}>{item.subject?.icon || '📝'}</Text>
+          </View>
+
+          <View style={styles.cardInfo}>
+            <Text style={styles.cardTitle} numberOfLines={1}>
+              {item.exam?.name || item.questionBank?.name || 'Daily Practice'}
             </Text>
-            <Text style={styles.quizDate}>{formatDate(item.assignedDate)}</Text>
+            <View style={styles.metaRow}>
+              <Text style={styles.metaText}>
+                {item.subject?.name || item.questionBank?.subjectName}
+              </Text>
+              <View style={styles.metaDot} />
+              <Text style={styles.metaText}>{formatDate(item.date)}</Text>
+            </View>
+          </View>
+
+          <View style={[styles.statusBadge, { backgroundColor: statusColor + '15' }]}>
+            <View style={[styles.statusDot, { backgroundColor: statusColor }]} />
+            <Text style={[styles.statusText, { color: statusColor }]}>
+              {getStatusText(item.status)}
+            </Text>
           </View>
         </View>
-        <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.status) + '20' }]}>
-          <Text style={[styles.statusText, { color: getStatusColor(item.status) }]}>
-            {getStatusText(item.status)}
+
+        {/* Stats Row */}
+        <View style={styles.statsRow}>
+          <View style={styles.statItem}>
+            <CustomIcon name="help-circle-outline" size={14} color="#9CA3AF" />
+            <Text style={styles.statText}>{item.totalQuestions} Questions</Text>
+          </View>
+          {item.status === 'completed' && (
+            <>
+              <View style={styles.statItem}>
+                <CustomIcon name="checkmark-circle-outline" size={14} color="#10B981" />
+                <Text style={styles.statText}>{item.score} Score</Text>
+              </View>
+              <View style={styles.statItem}>
+                <CustomIcon name="trending-up-outline" size={14} color={COLORS.primary} />
+                <Text style={styles.statText}>{item.accuracy}% Accuracy</Text>
+              </View>
+            </>
+          )}
+        </View>
+
+        {/* Action Row */}
+        <View style={styles.actionRow}>
+          <Text style={[styles.actionText, { color: statusColor }]}>
+            {getActionText(item.status)}
           </Text>
+          <CustomIcon name="chevron-forward" size={16} color={statusColor} />
         </View>
-      </View>
-
-      <View style={styles.quizStats}>
-        <View style={styles.statItem}>
-          <CustomIcon name="help-circle-outline" size={16} color="#6B7280" />
-          <Text style={styles.statText}>{item.totalQuestions} Questions</Text>
-        </View>
-        {item.status === 'completed' && (
-          <>
-            <View style={styles.statItem}>
-              <CustomIcon name="checkmark-circle-outline" size={16} color="#10B981" />
-              <Text style={styles.statText}>{item.score} Score</Text>
-            </View>
-            <View style={styles.statItem}>
-              <CustomIcon name="trending-up-outline" size={16} color="COLORS.primary" />
-              <Text style={styles.statText}>{item.accuracy}% Accuracy</Text>
-            </View>
-          </>
-        )}
-      </View>
-
-      <View style={styles.quizFooter}>
-        <Text style={styles.actionText}>
-          {item.status === 'completed' ? 'View Results' : item.status === 'in_progress' ? 'Resume Quiz' : 'Start Quiz'}
-        </Text>
-        <CustomIcon name="chevron-forward" size={20} color={COLORS.primary} />
-      </View>
-    </TouchableOpacity>
-  );
+      </TouchableOpacity>
+    );
+  };
 
   if (loading) {
     return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" color={COLORS.primary} />
+      <View style={styles.container}>
+        <Header title="Daily Practice" onBackPress={() => navigation.goBack()} />
+        <View style={styles.centered}>
+          <ActivityIndicator size="large" color={COLORS.primary} />
+          <Text style={styles.loadingText}>Loading quizzes...</Text>
+        </View>
       </View>
     );
   }
@@ -190,13 +219,15 @@ const DailyPracticeScreen = () => {
 
       {quizzes.length === 0 ? (
         <View style={styles.centered}>
-          <CustomIcon name="book-outline" size={64} color="#D1D5DB" />
+          <View style={styles.emptyIconBox}>
+            <CustomIcon name="book-outline" size={36} color="#9CA3AF" />
+          </View>
           <Text style={styles.emptyTitle}>No Daily Practice Available</Text>
           <Text style={styles.emptyText}>
             Daily practice quizzes will be assigned automatically.{'\n'}
             Please check back later!
           </Text>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.backButton}
             onPress={() => navigation.goBack()}
           >
@@ -230,127 +261,158 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 40,
   },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingTop: 60,
-    paddingBottom: 20,
-    backgroundColor: '#FFF',
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#111827',
-  },
-  placeholder: {
-    width: 24,
-  },
-  emptyTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#111827',
-    marginTop: 16,
-    marginBottom: 8,
-  },
-  emptyText: {
-    fontSize: 14,
-    color: '#6B7280',
-    textAlign: 'center',
-    lineHeight: 20,
-    marginBottom: 24,
-  },
-  backButton: {
-    backgroundColor: COLORS.primary,
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 12,
-  },
-  backButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#FFF',
+  loadingText: {
+    marginTop: 12,
+    fontSize: 13,
+    color: '#9CA3AF',
+    fontFamily: 'Poppins-Regular',
   },
   listContent: {
-    padding: 20,
-  },
-  quizCard: {
-    backgroundColor: '#FFF',
-    borderRadius: 16,
     padding: 16,
-    marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
   },
-  quizHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 12,
+
+  // Card
+  card: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 14,
+    padding: 14,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: '#F3F4F6',
   },
-  quizLeft: {
+  cardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
+    marginBottom: 12,
+  },
+  iconBox: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  iconEmoji: {
+    fontSize: 18,
+  },
+  cardInfo: {
     flex: 1,
-    gap: 12,
+    marginRight: 8,
   },
-  statusDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-  },
-  quizTitle: {
-    fontSize: 16,
+  cardTitle: {
+    fontSize: 14,
     fontWeight: '600',
     color: '#111827',
-    marginBottom: 4,
+    marginBottom: 2,
+    fontFamily: 'Poppins-SemiBold',
   },
-  quizDate: {
+  metaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  metaText: {
     fontSize: 12,
-    color: '#6B7280',
+    color: '#9CA3AF',
+    fontFamily: 'Poppins-Regular',
   },
+  metaDot: {
+    width: 3,
+    height: 3,
+    borderRadius: 1.5,
+    backgroundColor: '#D1D5DB',
+    marginHorizontal: 6,
+  },
+
+  // Status Badge
   statusBadge: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
     borderRadius: 8,
+    gap: 5,
+  },
+  statusDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
   },
   statusText: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '600',
+    fontFamily: 'Poppins-SemiBold',
   },
-  quizStats: {
+
+  // Stats
+  statsRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 16,
+    gap: 14,
     marginBottom: 12,
   },
   statItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: 4,
   },
   statText: {
-    fontSize: 13,
+    fontSize: 12,
     color: '#6B7280',
+    fontFamily: 'Poppins-Regular',
   },
-  quizFooter: {
+
+  // Action
+  actionRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingTop: 12,
+    paddingTop: 10,
     borderTopWidth: 1,
     borderTopColor: '#F3F4F6',
   },
   actionText: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '600',
-    color: COLORS.primary,
+    fontFamily: 'Poppins-SemiBold',
+  },
+
+  // Empty
+  emptyIconBox: {
+    width: 68,
+    height: 68,
+    borderRadius: 20,
+    backgroundColor: '#F3F4F6',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  emptyTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#111827',
+    marginBottom: 6,
+    fontFamily: 'Poppins-Bold',
+  },
+  emptyText: {
+    fontSize: 13,
+    color: '#9CA3AF',
+    textAlign: 'center',
+    lineHeight: 20,
+    marginBottom: 24,
+    fontFamily: 'Poppins-Regular',
+  },
+  backButton: {
+    backgroundColor: COLORS.primary,
+    paddingHorizontal: 24,
+    paddingVertical: 10,
+    borderRadius: 10,
+  },
+  backButtonText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#FFF',
+    fontFamily: 'Poppins-SemiBold',
   },
 });
 

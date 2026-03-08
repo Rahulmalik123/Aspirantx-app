@@ -1,11 +1,9 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import authService, { 
-  LoginRequest, 
-  RegisterRequest, 
-  VerifyOTPRequest,
+import authService, {
+  LoginRequest,
+  RegisterRequest,
   SendOTPRequest,
-  ResendOTPRequest,
   UpdateProfileRequest,
   CompleteProfileRequest,
 } from '../../api/services/authService';
@@ -34,7 +32,7 @@ export const sendOTP = createAsyncThunk(
     try {
       const response = await authService.sendOTP(data);
       console.log('✅ [AuthSlice] sendOTP response:', response);
-      return response;
+      return { ...response, phone: data.phone };
     } catch (error: any) {
       console.error('❌ [AuthSlice] sendOTP error:', error);
       return rejectWithValue(error.message);
@@ -44,7 +42,7 @@ export const sendOTP = createAsyncThunk(
 
 export const verifyOTP = createAsyncThunk(
   'auth/verifyOTP',
-  async (data: VerifyOTPRequest, { rejectWithValue }) => {
+  async (data: { phone: string; otp: string; reqId: string; purpose: 'login' | 'registration' | 'forgot-password' | 'phone-verification' }, { rejectWithValue }) => {
     console.log('📤 [AuthSlice] verifyOTP thunk called with:', data);
     try {
       const response = await authService.verifyOTP(data);
@@ -74,9 +72,9 @@ export const verifyOTP = createAsyncThunk(
 
 export const resendOTP = createAsyncThunk(
   'auth/resendOTP',
-  async (data: ResendOTPRequest, { rejectWithValue }) => {
+  async (data: { phone: string; reqId: string; retryChannel?: number; purpose: string }, { rejectWithValue }) => {
     try {
-      const response = await authService.resendOTP(data);
+      const response = await authService.resendOTP(data as any);
       return response;
     } catch (error: any) {
       return rejectWithValue(error.message);

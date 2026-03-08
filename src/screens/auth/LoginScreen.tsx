@@ -122,7 +122,8 @@ const LoginScreen = () => {
       if (result.success) {
         navigation.navigate(ROUTES.OTP, {
           phone: `+91${phone}`,
-          purpose: 'login'
+          purpose: 'login',
+          reqId: result.data?.reqId,
         });
       } else {
         setError(result.message || 'Failed to send OTP');

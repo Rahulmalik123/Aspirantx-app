@@ -25,7 +25,7 @@ const OTPScreen = () => {
   const route = useRoute<any>();
   const dispatch = useDispatch<AppDispatch>();
 
-  const { phone, purpose } = route.params || {};
+  const { phone, purpose, reqId } = route.params || {};
 
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [loading, setLoading] = useState(false);
@@ -88,10 +88,11 @@ const OTPScreen = () => {
 
     try {
       setLoading(true);
-      console.log('🚀 [OTPScreen] Verifying OTP...');
+      console.log('🚀 [OTPScreen] Verifying OTP via MSG91...');
       const result = await dispatch(verifyOTP({
         phone,
         otp: otpToVerify,
+        reqId,
         purpose
       })).unwrap();
       console.log('✅ [OTPScreen] OTP verification result:', result);
@@ -137,7 +138,7 @@ const OTPScreen = () => {
 
       const result = await dispatch(resendOTP({
         phone,
-        type: 'phone',
+        reqId,
         purpose
       })).unwrap();
       console.log('✅ [OTPScreen] Resend OTP result:', result);
