@@ -1,3 +1,5 @@
+import { RAZORPAY_KEY_ID } from '@env';
+
 // App Configuration
 export const APP_CONFIG = {
   APP_NAME: 'AspirantHub',
@@ -30,6 +32,9 @@ export const APP_CONFIG = {
   
   // Cache
   CACHE_EXPIRY: 24 * 60 * 60 * 1000, // 24 hours
+
+  // Razorpay
+  RAZORPAY_KEY_ID: RAZORPAY_KEY_ID || '',
 };
 
 // Feature Flags

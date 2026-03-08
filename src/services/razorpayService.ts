@@ -1,22 +1,6 @@
-import { NativeModules } from 'react-native';
+import RazorpayCheckout from 'react-native-razorpay';
 import { COLORS } from '../constants/colors';
-
-interface RazorpayOptions {
-  key: string;
-  amount: number;
-  currency: string;
-  name: string;
-  description: string;
-  order_id: string;
-  prefill?: {
-    name?: string;
-    email?: string;
-    contact?: string;
-  };
-  theme?: {
-    color?: string;
-  };
-}
+import { APP_CONFIG } from '../constants/config';
 
 interface RazorpayResponse {
   razorpay_payment_id: string;
@@ -25,7 +9,7 @@ interface RazorpayResponse {
 }
 
 class RazorpayService {
-  private readonly RAZORPAY_KEY = 'rzp_test_your_key_here'; // Replace with actual key from env
+  private readonly RAZORPAY_KEY = APP_CONFIG.RAZORPAY_KEY_ID;
 
   async initiatePayment(
     amount: number,
@@ -34,55 +18,31 @@ class RazorpayService {
     userEmail?: string,
     userPhone?: string
   ): Promise<RazorpayResponse> {
-    return new Promise((resolve, reject) => {
-      const options: RazorpayOptions = {
-        key: this.RAZORPAY_KEY,
-        amount: amount * 100, // Convert to paise
-        currency: 'INR',
-        name: 'Aspirantx',
-        description: 'Wallet Recharge',
-        order_id: orderId,
-        prefill: {
-          name: userName,
-          email: userEmail,
-          contact: userPhone,
-        },
-        theme: {
-          color: 'COLORS.primary',
-        },
-      };
+    const options = {
+      key: this.RAZORPAY_KEY,
+      amount: (amount * 100).toString(),
+      currency: 'INR',
+      name: 'AspirantX',
+      description: 'Wallet Recharge',
+      order_id: orderId,
+      prefill: {
+        name: userName || '',
+        email: userEmail || '',
+        contact: userPhone || '',
+      },
+      theme: {
+        color: COLORS.primary,
+      },
+    };
 
-      try {
-        // Check if Razorpay module is available
-        if (!NativeModules.RazorpayCheckout) {
-          console.warn('⚠️ Razorpay SDK not installed. Using mock payment.');
-          // Mock successful payment for development
-          setTimeout(() => {
-            resolve({
-              razorpay_payment_id: `pay_mock_${Date.now()}`,
-              razorpay_order_id: orderId,
-              razorpay_signature: `sig_mock_${Date.now()}`,
-            });
-          }, 2000);
-          return;
-        }
-
-        NativeModules.RazorpayCheckout.open(
-          options,
-          (data: RazorpayResponse) => {
-            console.log('✅ Payment successful:', data);
-            resolve(data);
-          },
-          (error: any) => {
-            console.error('❌ Payment failed:', error);
-            reject(new Error(error.description || 'Payment failed'));
-          }
-        );
-      } catch (error) {
-        console.error('❌ Razorpay error:', error);
-        reject(error);
-      }
-    });
+    try {
+      const data = await RazorpayCheckout.open(options);
+      console.log('Payment successful:', data);
+      return data as RazorpayResponse;
+    } catch (error: any) {
+      console.error('Payment failed:', error);
+      throw new Error(error?.description || error?.message || 'Payment was cancelled');
+    }
   }
 
   async initiatePurchase(
@@ -92,49 +52,28 @@ class RazorpayService {
     userName?: string,
     userEmail?: string
   ): Promise<RazorpayResponse> {
-    return new Promise((resolve, reject) => {
-      const options: RazorpayOptions = {
-        key: this.RAZORPAY_KEY,
-        amount: amount * 100,
-        currency: 'INR',
-        name: 'Aspirantx',
-        description: description,
-        order_id: orderId,
-        prefill: {
-          name: userName,
-          email: userEmail,
-        },
-        theme: {
-          color: 'COLORS.primary',
-        },
-      };
+    const options = {
+      key: this.RAZORPAY_KEY,
+      amount: (amount * 100).toString(),
+      currency: 'INR',
+      name: 'AspirantX',
+      description: description,
+      order_id: orderId,
+      prefill: {
+        name: userName || '',
+        email: userEmail || '',
+      },
+      theme: {
+        color: COLORS.primary,
+      },
+    };
 
-      try {
-        if (!NativeModules.RazorpayCheckout) {
-          console.warn('⚠️ Razorpay SDK not installed. Using mock payment.');
-          setTimeout(() => {
-            resolve({
-              razorpay_payment_id: `pay_mock_${Date.now()}`,
-              razorpay_order_id: orderId,
-              razorpay_signature: `sig_mock_${Date.now()}`,
-            });
-          }, 2000);
-          return;
-        }
-
-        NativeModules.RazorpayCheckout.open(
-          options,
-          (data: RazorpayResponse) => {
-            resolve(data);
-          },
-          (error: any) => {
-            reject(new Error(error.description || 'Payment failed'));
-          }
-        );
-      } catch (error) {
-        reject(error);
-      }
-    });
+    try {
+      const data = await RazorpayCheckout.open(options);
+      return data as RazorpayResponse;
+    } catch (error: any) {
+      throw new Error(error?.description || error?.message || 'Payment was cancelled');
+    }
   }
 }
 

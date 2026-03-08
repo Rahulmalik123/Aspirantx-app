@@ -857,7 +857,7 @@ const styles = StyleSheet.create({
   },
   banner: {
     borderRadius: 20,
-    minHeight: 180,
+    height: 180,
     overflow: 'hidden',
     position: 'relative',
     justifyContent: 'flex-end',
@@ -869,8 +869,6 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    width: '100%',
-    height: '100%',
     borderRadius: 20,
   },
   bannerOverlay: {

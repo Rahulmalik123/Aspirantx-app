@@ -299,9 +299,10 @@ const PostCard: React.FC<PostCardProps> = ({
         </View>
         
         <View style={styles.rightActions}>
-          <SaveButton 
+          <SaveButton
             contentType="post"
             contentId={post._id}
+            initialSavedState={post.isSaved}
             size={24}
             showFeedback={false}
           />

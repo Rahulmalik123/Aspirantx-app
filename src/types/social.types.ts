@@ -60,6 +60,7 @@ export interface Post {
   flagReason?: string;
   hashtags: string[];
   
+  isSaved?: boolean;
   isActive: boolean;
   createdAt: string;
   updatedAt: string;

@@ -102,12 +102,12 @@ export const ENDPOINTS = {
   
   // Wallet
   WALLET: '/api/v1/wallet',
-  WALLET_RECHARGE: '/api/v1/wallet/recharge',
-  WALLET_VERIFY: '/api/v1/wallet/verify-payment',
+  WALLET_RECHARGE: '/api/v1/payment/create-order',
+  WALLET_VERIFY: '/api/v1/payment/verify',
   TRANSACTIONS: '/api/v1/wallet/transactions',
   EARNINGS: '/api/v1/wallet/earnings',
   WITHDRAW: '/api/v1/wallet/withdraw',
-  COIN_PACKAGES: '/api/v1/wallet/packages',
+  COIN_PACKAGES: '/api/v1/payment/packages',
   
   // Payments
   CREATE_ORDER: '/api/v1/payments/create-order',

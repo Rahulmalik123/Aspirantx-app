@@ -10,6 +10,7 @@ import { COLORS } from '../constants/colors';
 interface SaveButtonProps {
   contentType: 'post' | 'test' | 'pdf';
   contentId: string;
+  initialSavedState?: boolean;
   size?: number;
   color?: string;
   activeColor?: string;
@@ -21,6 +22,7 @@ interface SaveButtonProps {
 const SaveButton: React.FC<SaveButtonProps> = ({
   contentType,
   contentId,
+  initialSavedState,
   size = 22,
   color = '#6B7280',
   activeColor = COLORS.primary,
@@ -29,9 +31,9 @@ const SaveButton: React.FC<SaveButtonProps> = ({
   showFeedback = true,
 }) => {
   const dispatch = useDispatch<AppDispatch>();
-  const [isSaved, setIsSaved] = useState(false);
+  const [isSaved, setIsSaved] = useState(initialSavedState ?? false);
   const [loading, setLoading] = useState(false);
-  const [checking, setChecking] = useState(true);
+  const [checking, setChecking] = useState(initialSavedState === undefined);
 
   const checkSavedStatus = useCallback(async () => {
     try {
@@ -40,12 +42,8 @@ const SaveButton: React.FC<SaveButtonProps> = ({
         contentType,
         contentId,
       });
-      console.log('Check saved response:', response);
       if (response && typeof response.isSaved === 'boolean') {
-        console.log('Setting isSaved to:', response.isSaved);
         setIsSaved(response.isSaved);
-      } else {
-        console.log('Invalid response:', response);
       }
     } catch (error) {
       console.error('Error checking saved status:', error);
@@ -55,8 +53,10 @@ const SaveButton: React.FC<SaveButtonProps> = ({
   }, [contentType, contentId]);
 
   useEffect(() => {
+    // Skip API call if initialSavedState was provided
+    if (initialSavedState !== undefined) return;
     checkSavedStatus();
-  }, [checkSavedStatus]);
+  }, [checkSavedStatus, initialSavedState]);
 
   const handlePress = async () => {
     if (loading) return;

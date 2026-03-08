@@ -23,6 +23,7 @@ import { SPACING } from '../../constants/spacing';
 import { imagePickerUtils } from '../../utils/imagePicker.utils';
 import { uploadService } from '../../api/services/upload.service';
 import { userService } from '../../api/services';
+import walletService from '../../api/services/walletService';
 
 interface MenuItem {
   id: string;
@@ -48,6 +49,7 @@ const ProfileScreen = () => {
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [darkModeEnabled, setDarkModeEnabled] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [walletBalance, setWalletBalance] = useState<number | null>(null);
 
   // Refresh user data when screen comes into focus
   useFocusEffect(
@@ -56,12 +58,12 @@ const ProfileScreen = () => {
         try {
           const response = await userService.getProfile();
           console.log('👤 [ProfileScreen] User data received:', JSON.stringify(response, null, 2));
-          
+
           // Handle nested response structure
           const userData = response?.data?.user || response?.user || response;
           console.log('👥 [ProfileScreen] Followers:', userData?.followers);
           console.log('👥 [ProfileScreen] Following:', userData?.following);
-          
+
           if (userData) {
             dispatch(setUser(userData));
           }
@@ -69,8 +71,20 @@ const ProfileScreen = () => {
           console.error('Error refreshing user data:', error);
         }
       };
-      
+
+      const fetchWalletBalance = async () => {
+        try {
+          const walletRes = await walletService.getWallet();
+          const walletData = (walletRes as any)?.data ?? walletRes;
+          const total = (walletData?.balance || 0) + (walletData?.freeBalance || 0);
+          setWalletBalance(total);
+        } catch (error) {
+          console.error('Error fetching wallet balance:', error);
+        }
+      };
+
       refreshUserData();
+      fetchWalletBalance();
     }, [dispatch])
   );
 
@@ -265,7 +279,7 @@ const ProfileScreen = () => {
           label: 'My Wallet', 
           icon: 'wallet-outline', 
           onPress: () => navigation.navigate('Wallet'),
-          badge: `${user?.coins || 0} coins`,
+          badge: `${walletBalance !== null ? walletBalance : (user?.coins || 0)} coins`,
           showArrow: true,
         },
         // { 
