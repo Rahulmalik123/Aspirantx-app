@@ -17,6 +17,71 @@ import { Subject } from '../../types/subject.types';
 import Header from '../../components/common/Header';
 import CustomIcon from '../../components/CustomIcon';
 
+// Accent colors for icon containers only (cards stay white)
+const ACCENT_COLORS = [
+  '#4F46E5', // Indigo
+  '#059669', // Emerald
+  '#D97706', // Amber
+  '#DC2626', // Red
+  '#7C3AED', // Violet
+  '#0284C7', // Sky
+  '#DB2777', // Pink
+  '#EA580C', // Orange
+  '#16A34A', // Green
+  '#2563EB', // Blue
+];
+
+// Light tints for icon backgrounds
+const ACCENT_TINTS = [
+  '#EEF2FF',
+  '#ECFDF5',
+  '#FEF3C7',
+  '#FEE2E2',
+  '#F3E8FF',
+  '#E0F2FE',
+  '#FCE7F3',
+  '#FFF7ED',
+  '#F0FDF4',
+  '#EFF6FF',
+];
+
+// Subject-specific icon mapping
+const SUBJECT_ICONS: Record<string, string> = {
+  math: 'calculator-outline',
+  ganit: 'calculator-outline',
+  science: 'flask-outline',
+  vigyan: 'flask-outline',
+  english: 'language-outline',
+  hindi: 'text-outline',
+  history: 'time-outline',
+  itihas: 'time-outline',
+  geography: 'earth-outline',
+  bhugol: 'earth-outline',
+  polity: 'flag-outline',
+  rajniti: 'flag-outline',
+  economics: 'trending-up-outline',
+  arthshastra: 'trending-up-outline',
+  reasoning: 'bulb-outline',
+  tarkshakti: 'bulb-outline',
+  general: 'book-outline',
+  samanya: 'book-outline',
+  computer: 'desktop-outline',
+  current: 'newspaper-outline',
+  physics: 'planet-outline',
+  chemistry: 'beaker-outline',
+  biology: 'leaf-outline',
+  environment: 'globe-outline',
+  paryavaran: 'globe-outline',
+};
+
+const getSubjectIcon = (name: string): string => {
+  const lower = name.toLowerCase();
+  for (const [key, icon] of Object.entries(SUBJECT_ICONS)) {
+    if (lower.includes(key)) return icon;
+  }
+  return 'book-outline';
+};
+
 const SubjectListScreen = () => {
   const navigation = useNavigation<any>();
   const route = useRoute<any>();
@@ -39,14 +104,10 @@ const SubjectListScreen = () => {
   const fetchSubjects = async (isRefresh = false) => {
     try {
       if (!isRefresh) setLoading(true);
-      
-      console.log('📥 [SubjectList] Fetching subjects for examId:', examId);
       const response = await subjectService.getSubjects(examId);
-      
-      console.log('📥 [SubjectList] Received subjects:', response.data?.length);
       setSubjects(response.data || []);
     } catch (error: any) {
-      console.error('❌ [SubjectList] Error fetching subjects:', error);
+      console.error('[SubjectList] Error fetching subjects:', error);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -63,7 +124,6 @@ const SubjectListScreen = () => {
       setFilteredSubjects(subjects);
       return;
     }
-
     const query = searchQuery.toLowerCase();
     const filtered = subjects.filter(
       (subject) =>
@@ -75,7 +135,6 @@ const SubjectListScreen = () => {
   };
 
   const handleSubjectPress = (subject: Subject) => {
-    // Navigate to Subject-wise Tests list for this subject
     navigation.navigate(ROUTES.TEST_LIST, {
       examId,
       examName,
@@ -86,7 +145,6 @@ const SubjectListScreen = () => {
   };
 
   const handleViewTopics = (subject: Subject) => {
-    // Navigate to Topics screen
     navigation.navigate(ROUTES.TOPIC_SELECTION, {
       subjectId: subject._id,
       subjectName: subject.name,
@@ -95,70 +153,58 @@ const SubjectListScreen = () => {
     });
   };
 
-  const renderSubjectCard = ({ item }: { item: Subject }) => (
-    <TouchableOpacity
-      style={styles.subjectCard}
-      onPress={() => handleSubjectPress(item)}
-      activeOpacity={0.7}
-    >
-      <View style={styles.subjectHeader}>
-        <View style={styles.subjectIconContainer}>
-          <CustomIcon name="book-outline" size={28} color={COLORS.primary} />
-        </View>
-        <View style={styles.subjectInfo}>
-          <Text style={styles.subjectName}>{item.name}</Text>
-          {item.description && (
-            <Text style={styles.subjectDescription} numberOfLines={2}>
-              {item.description}
-            </Text>
-          )}
-        </View>
-      </View>
+  const renderSubjectCard = ({ item, index }: { item: Subject; index: number }) => {
+    const accent = ACCENT_COLORS[index % ACCENT_COLORS.length];
+    const tint = ACCENT_TINTS[index % ACCENT_TINTS.length];
+    const iconName = getSubjectIcon(item.name);
 
-      <View style={styles.subjectStats}>
-        <View style={styles.statItem}>
-          <CustomIcon name="document-text-outline" size={18} color={COLORS.textSecondary} />
-          <Text style={styles.statText}>{item.totalQuestions} Questions</Text>
+    return (
+      <TouchableOpacity
+        style={styles.card}
+        onPress={() => handleSubjectPress(item)}
+        activeOpacity={0.6}
+      >
+        {/* Left: Colored Icon */}
+        <View style={[styles.iconBox, { backgroundColor: tint }]}>
+          <CustomIcon name={iconName} size={22} color={accent} />
         </View>
-        <View style={styles.statItem}>
-          <CustomIcon name="file-tray-full-outline" size={18} color={COLORS.textSecondary} />
-          <Text style={styles.statText}>{item.totalTopics} Topics</Text>
+
+        {/* Middle: Info */}
+        <View style={styles.cardContent}>
+          <Text style={styles.cardTitle} numberOfLines={1}>
+            {item.name}
+          </Text>
+          <View style={styles.metaRow}>
+            <Text style={styles.metaText}>{item.totalQuestions} Questions</Text>
+            <View style={styles.metaDot} />
+            <TouchableOpacity
+              onPress={(e) => {
+                e.stopPropagation();
+                handleViewTopics(item);
+              }}
+            >
+              <Text style={[styles.metaText, { color: accent }]}>
+                {item.totalTopics} Topics
+              </Text>
+            </TouchableOpacity>
+          </View>
         </View>
-      </View>
 
-      <View style={styles.subjectActions}>
-        <TouchableOpacity
-          style={styles.actionButton}
-          onPress={(e) => {
-            e.stopPropagation();
-            handleViewTopics(item);
-          }}
-        >
-          <CustomIcon name="list-outline" size={16} color={COLORS.primary} />
-          <Text style={styles.actionButtonText}>View Topics</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity 
-          style={styles.primaryButton}
-          onPress={(e) => {
-            e.stopPropagation();
-            handleSubjectPress(item);
-          }}
-        >
-          <Text style={styles.primaryButtonText}>View Tests</Text>
-          <CustomIcon name="arrow-forward" size={16} color={COLORS.white} />
-        </TouchableOpacity>
-      </View>
-    </TouchableOpacity>
-  );
+        {/* Right: Arrow */}
+        <CustomIcon name="chevron-forward" size={18} color="#D1D5DB" />
+      </TouchableOpacity>
+    );
+  };
 
   const renderEmptyState = () => (
     <View style={styles.emptyState}>
-      <CustomIcon name="book-outline" size={64} color={COLORS.textSecondary} />
+      <View style={styles.emptyIconBox}>
+        <CustomIcon name="book-outline" size={36} color="#9CA3AF" />
+      </View>
       <Text style={styles.emptyTitle}>No Subjects Found</Text>
       <Text style={styles.emptyText}>
         {searchQuery
-          ? 'No subjects match your search criteria'
+          ? 'No subjects match your search'
           : 'No subjects available for this exam'}
       </Text>
     </View>
@@ -167,8 +213,12 @@ const SubjectListScreen = () => {
   if (loading) {
     return (
       <View style={styles.container}>
-        <Header title={`${examName} - Subjects`} showBackButton onBackPress={() => navigation.goBack()} />
-        <View style={styles.loadingContainer}>
+        <Header
+          title={`${examName} - Subjects`}
+          showBackButton
+          onBackPress={() => navigation.goBack()}
+        />
+        <View style={styles.centered}>
           <ActivityIndicator size="large" color={COLORS.primary} />
           <Text style={styles.loadingText}>Loading subjects...</Text>
         </View>
@@ -178,25 +228,37 @@ const SubjectListScreen = () => {
 
   return (
     <View style={styles.container}>
-      <Header title={`${examName} - Subjects`} showBackButton onBackPress={() => navigation.goBack()} />
+      <Header
+        title={`${examName} - Subjects`}
+        showBackButton
+        onBackPress={() => navigation.goBack()}
+      />
 
-      <View style={styles.content}>
+      <View style={styles.body}>
         {/* Search Bar */}
-        <View style={styles.searchContainer}>
-          <CustomIcon name="search" size={20} color={COLORS.textSecondary} />
+        <View style={styles.searchBar}>
+          <CustomIcon name="search" size={18} color="#9CA3AF" />
           <TextInput
             style={styles.searchInput}
             placeholder="Search subjects..."
-            placeholderTextColor={COLORS.textSecondary}
+            placeholderTextColor="#9CA3AF"
             value={searchQuery}
             onChangeText={setSearchQuery}
           />
           {searchQuery.length > 0 && (
             <TouchableOpacity onPress={() => setSearchQuery('')}>
-              <CustomIcon name="close-circle" size={20} color={COLORS.textSecondary} />
+              <CustomIcon name="close-circle" size={18} color="#D1D5DB" />
             </TouchableOpacity>
           )}
         </View>
+
+        {/* Subject Count */}
+        {filteredSubjects.length > 0 && (
+          <Text style={styles.sectionLabel}>
+            {filteredSubjects.length}{' '}
+            {filteredSubjects.length === 1 ? 'Subject' : 'Subjects'}
+          </Text>
+        )}
 
         {/* Subjects List */}
         <FlatList
@@ -223,155 +285,134 @@ const SubjectListScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: '#F9FAFB',
   },
-  content: {
-    flex: 1,
-    padding: 16,
-  },
-  loadingContainer: {
+  centered: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
   loadingText: {
     marginTop: 12,
-    fontSize: 14,
-    color: COLORS.textSecondary,
+    fontSize: 13,
+    color: '#9CA3AF',
+    fontFamily: 'Poppins-Regular',
   },
-  searchContainer: {
+  body: {
+    flex: 1,
+    paddingHorizontal: 16,
+    paddingTop: 12,
+  },
+
+  // Search
+  searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.white,
+    backgroundColor: '#FFFFFF',
     borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderWidth: 1,
+    borderColor: '#F3F4F6',
     marginBottom: 16,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
   },
   searchInput: {
     flex: 1,
-    marginLeft: 12,
+    marginLeft: 10,
     fontSize: 14,
-    color: COLORS.text,
+    color: '#111827',
+    fontFamily: 'Poppins-Regular',
+    paddingVertical: 0,
   },
+
+  // Section
+  sectionLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#6B7280',
+    marginBottom: 10,
+    fontFamily: 'Poppins-SemiBold',
+  },
+
+  // List
   listContent: {
-    paddingBottom: 16,
+    paddingBottom: 24,
   },
-  subjectCard: {
-    backgroundColor: COLORS.white,
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 16,
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-  },
-  subjectHeader: {
-    flexDirection: 'row',
-    marginBottom: 16,
-  },
-  subjectIconContainer: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: `${COLORS.primary}15`,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
-  },
-  subjectInfo: {
-    flex: 1,
-  },
-  subjectName: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: COLORS.text,
-    marginBottom: 4,
-  },
-  subjectDescription: {
-    fontSize: 13,
-    color: COLORS.textSecondary,
-    lineHeight: 18,
-  },
-  subjectStats: {
-    flexDirection: 'row',
-    marginBottom: 16,
-    paddingTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: COLORS.border,
-  },
-  statItem: {
+
+  // Card - White, clean, minimal
+  card: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginRight: 24,
-  },
-  statText: {
-    fontSize: 13,
-    color: COLORS.textSecondary,
-    marginLeft: 6,
-  },
-  subjectActions: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    gap: 12,
-  },
-  actionButton: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderRadius: 8,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 14,
+    padding: 14,
+    marginBottom: 10,
     borderWidth: 1,
-    borderColor: COLORS.primary,
+    borderColor: '#F3F4F6',
   },
-  actionButtonText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: COLORS.primary,
-    marginLeft: 6,
+  iconBox: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 14,
   },
-  primaryButton: {
+  cardContent: {
     flex: 1,
+  },
+  cardTitle: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#111827',
+    marginBottom: 4,
+    fontFamily: 'Poppins-SemiBold',
+  },
+  metaRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-    backgroundColor: COLORS.primary,
   },
-  primaryButtonText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: COLORS.white,
-    marginRight: 6,
+  metaText: {
+    fontSize: 12,
+    color: '#9CA3AF',
+    fontFamily: 'Poppins-Regular',
   },
+  metaDot: {
+    width: 3,
+    height: 3,
+    borderRadius: 1.5,
+    backgroundColor: '#D1D5DB',
+    marginHorizontal: 8,
+  },
+
+  // Empty
   emptyState: {
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 64,
+    paddingVertical: 80,
+    paddingHorizontal: 32,
+  },
+  emptyIconBox: {
+    width: 68,
+    height: 68,
+    borderRadius: 20,
+    backgroundColor: '#F3F4F6',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 16,
   },
   emptyTitle: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '700',
-    color: COLORS.text,
-    marginTop: 16,
-    marginBottom: 8,
+    color: '#111827',
+    marginBottom: 6,
+    fontFamily: 'Poppins-Bold',
   },
   emptyText: {
-    fontSize: 14,
-    color: COLORS.textSecondary,
+    fontSize: 13,
+    color: '#9CA3AF',
     textAlign: 'center',
-    paddingHorizontal: 32,
+    fontFamily: 'Poppins-Regular',
   },
 });
 
