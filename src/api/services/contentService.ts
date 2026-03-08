@@ -134,12 +134,12 @@ class ContentService {
 
   // Purchase content
   async purchaseContent(contentId: string, referralCode?: string): Promise<{ success: boolean; purchase: Purchase }> {
-    return apiClient.post(`/content/purchase/${contentId}`, { referralCode });
+    return apiClient.post(ENDPOINTS.PURCHASE_CONTENT(contentId), { referralCode });
   }
 
   // Get my purchases
   async getMyPurchases(): Promise<Purchase[]> {
-    return apiClient.get('/content/my-purchases');
+    return apiClient.get(ENDPOINTS.MY_PURCHASES);
   }
 
   // Download content
@@ -154,12 +154,12 @@ class ContentService {
     }>;
     downloadCount: number;
   }> {
-    return apiClient.get(`/content/download/${purchaseId}`);
+    return apiClient.get(ENDPOINTS.DOWNLOAD_CONTENT(purchaseId));
   }
 
   // Add review
   async addReview(contentId: string, rating: number, review: string): Promise<any> {
-    return apiClient.post(`/content/review/${contentId}`, { rating, review });
+    return apiClient.post(ENDPOINTS.ADD_REVIEW(contentId), { rating, review });
   }
 
   // Track view

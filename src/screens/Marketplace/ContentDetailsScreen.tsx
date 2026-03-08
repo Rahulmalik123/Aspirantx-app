@@ -7,7 +7,6 @@ import {
   TouchableOpacity,
   Image,
   ActivityIndicator,
-  Alert,
   Linking,
   Modal,
   TextInput,
@@ -16,6 +15,8 @@ import {useSelector} from 'react-redux';
 import CustomIcon from '../../components/CustomIcon';
 import contentService, {ContentDetails} from '../../api/services/contentService';
 import { COLORS } from '../../constants/colors';
+import { showSuccessToast, showErrorToast, showInfoToast } from '../../utils/toast';
+import ActionModal from '../../components/common/ActionModal';
 
 const ContentDetailsScreen = ({route, navigation}: any) => {
   const {contentId} = route.params;
@@ -29,6 +30,14 @@ const ContentDetailsScreen = ({route, navigation}: any) => {
   const [rating, setRating] = useState(0);
   const [reviewText, setReviewText] = useState('');
   const [submittingReview, setSubmittingReview] = useState(false);
+  const [actionModal, setActionModal] = useState<{
+    visible: boolean;
+    icon?: string;
+    iconColor?: string;
+    title: string;
+    message: string;
+    buttons: Array<{text: string; onPress: () => void; style?: 'default' | 'cancel' | 'destructive'}>;
+  }>({visible: false, title: '', message: '', buttons: []});
 
   // Check if current user is the creator
   const isOwnContent = content && currentUser && (
@@ -59,7 +68,7 @@ const ContentDetailsScreen = ({route, navigation}: any) => {
       setReviews(reviewsData);
     } catch (error) {
       console.error('❌ [ContentDetails] Failed to load:', error);
-      Alert.alert('Error', 'Failed to load content details');
+      showErrorToast('Failed to load content details');
     } finally {
       setLoading(false);
     }
@@ -77,7 +86,7 @@ const ContentDetailsScreen = ({route, navigation}: any) => {
     if (!content) return;
 
     if (content.isPurchased) {
-      Alert.alert('Already Purchased', 'You have already purchased this content. Check "My Purchases" to download.');
+      showInfoToast('Already Purchased', 'Check "My Purchases" to download.');
       return;
     }
 
@@ -86,70 +95,66 @@ const ContentDetailsScreen = ({route, navigation}: any) => {
       try {
         setPurchasing(true);
         await contentService.purchaseContent(contentId);
-        Alert.alert('Success', 'Content added to your library!', [
-          {
-            text: 'View Downloads',
-            onPress: () => navigation.navigate('MyPurchases'),
-          },
-          {text: 'OK'},
-        ]);
-        // Reload content to update isPurchased status
+        showSuccessToast('Content added to your library!');
         loadContentDetails();
       } catch (error: any) {
-        Alert.alert(
-          'Error',
-          error.response?.data?.message || 'Failed to get content',
-        );
+        showErrorToast('Error', error.message || 'Failed to get content');
       } finally {
         setPurchasing(false);
       }
       return;
     }
 
-    // Paid content - show purchase confirmation with wallet info
+    // Paid content - show purchase confirmation modal
     const price = content.pricing?.originalPrice || content.price || 0;
-    Alert.alert(
-      'Purchase Content',
-      `Purchase "${content.title}" for ₹${price}?\n\nThis will be deducted from your wallet balance.`,
-      [
-        {text: 'Cancel', style: 'cancel'},
-        {
-          text: 'Purchase',
-          onPress: async () => {
-            try {
-              setPurchasing(true);
-              await contentService.purchaseContent(contentId);
-              Alert.alert('Success', 'Content purchased successfully! 🎉', [
-                {
-                  text: 'View Downloads',
-                  onPress: () => navigation.navigate('MyPurchases'),
+    const closeModal = () => setActionModal(prev => ({...prev, visible: false}));
+
+    const executePurchase = async () => {
+      closeModal();
+      try {
+        setPurchasing(true);
+        await contentService.purchaseContent(contentId);
+        showSuccessToast('Purchase Successful!', 'Content added to your library');
+        loadContentDetails();
+      } catch (error: any) {
+        const errorMsg = error.message || 'Purchase failed';
+        if (errorMsg.includes('Insufficient') || errorMsg.includes('balance') || errorMsg.includes('coins')) {
+          setActionModal({
+            visible: true,
+            icon: 'wallet-outline',
+            iconColor: '#F59E0B',
+            title: 'Insufficient Coins',
+            message: errorMsg,
+            buttons: [
+              {text: 'Cancel', style: 'cancel', onPress: closeModal},
+              {
+                text: 'Recharge Wallet',
+                onPress: () => {
+                  closeModal();
+                  navigation.navigate('Wallet');
                 },
-                {text: 'OK', onPress: () => loadContentDetails()},
-              ]);
-            } catch (error: any) {
-              const errorMsg = error.response?.data?.message || 'Purchase failed';
-              if (errorMsg.includes('Insufficient') || errorMsg.includes('balance')) {
-                Alert.alert(
-                  'Insufficient Balance',
-                  'Please recharge your wallet to purchase this content.',
-                  [
-                    {text: 'Cancel', style: 'cancel'},
-                    {
-                      text: 'Recharge Wallet',
-                      onPress: () => navigation.navigate('Wallet'),
-                    },
-                  ],
-                );
-              } else {
-                Alert.alert('Error', errorMsg);
-              }
-            } finally {
-              setPurchasing(false);
-            }
-          },
-        },
+              },
+            ],
+          });
+        } else {
+          showErrorToast('Purchase Failed', errorMsg);
+        }
+      } finally {
+        setPurchasing(false);
+      }
+    };
+
+    setActionModal({
+      visible: true,
+      icon: 'cart-outline',
+      iconColor: COLORS.primary,
+      title: 'Purchase Content',
+      message: `Purchase "${content.title}" for ₹${price}?\n\nThis will be deducted from your wallet balance.`,
+      buttons: [
+        {text: 'Cancel', style: 'cancel', onPress: closeModal},
+        {text: 'Purchase', onPress: executePurchase},
       ],
-    );
+    });
   };
 
   const handleDownload = () => {
@@ -165,34 +170,34 @@ const ContentDetailsScreen = ({route, navigation}: any) => {
       if (supported) {
         await Linking.openURL(content.previewUrl);
       } else {
-        Alert.alert('Error', 'Cannot open preview');
+        showErrorToast('Cannot open preview');
       }
     } catch (error) {
-      Alert.alert('Error', 'Failed to open preview');
+      showErrorToast('Failed to open preview');
     }
   };
 
   const handleAddReview = async () => {
     if (rating === 0) {
-      Alert.alert('Rating Required', 'Please select a rating');
+      showErrorToast('Rating Required', 'Please select a rating');
       return;
     }
     if (!reviewText.trim()) {
-      Alert.alert('Review Required', 'Please write a review');
+      showErrorToast('Review Required', 'Please write a review');
       return;
     }
 
     try {
       setSubmittingReview(true);
       await contentService.addReview(contentId, rating, reviewText.trim());
-      Alert.alert('Success', 'Review added successfully!');
+      showSuccessToast('Review added successfully!');
       setShowReviewModal(false);
       setRating(0);
       setReviewText('');
       // Reload content to show new review
       loadContentDetails();
     } catch (error: any) {
-      Alert.alert('Error', error.message || 'Failed to add review');
+      showErrorToast('Failed to add review', error.message);
     } finally {
       setSubmittingReview(false);
     }
@@ -201,7 +206,7 @@ const ContentDetailsScreen = ({route, navigation}: any) => {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="COLORS.primary" />
+        <ActivityIndicator size="large" color={COLORS.primary} />
       </View>
     );
   }
@@ -282,7 +287,7 @@ const ContentDetailsScreen = ({route, navigation}: any) => {
               <CustomIcon
                 name={getContentIcon(content.contentType)}
                 size={16}
-                color="COLORS.primary"
+                color={COLORS.primary}
                 type="material-community"
               />
               <Text style={styles.typeText}>
@@ -333,7 +338,7 @@ const ContentDetailsScreen = ({route, navigation}: any) => {
             
             <View style={styles.statCard}>
               <View style={styles.statIconWrapper}>
-                <CustomIcon name="download" size={20} color="COLORS.primary" type="material-community" />
+                <CustomIcon name="download" size={20} color={COLORS.primary} type="material-community" />
               </View>
               <View style={styles.statInfo}>
                 <Text style={styles.statValue}>{content.totalSales || content.purchaseCount || 0}</Text>
@@ -369,7 +374,7 @@ const ContentDetailsScreen = ({route, navigation}: any) => {
                 <CustomIcon
                   name="eye"
                   size={20}
-                  color="COLORS.primary"
+                  color={COLORS.primary}
                   type="material-community"
                 />
                 <Text style={styles.previewButtonText}>
@@ -425,7 +430,7 @@ const ContentDetailsScreen = ({route, navigation}: any) => {
                 <CustomIcon
                   name="star-outline"
                   size={48}
-                  color="COLORS.primary"
+                  color={COLORS.primary}
                   type="material-community"
                 />
                 <Text style={styles.emptyReviewTitle}>Be the first to review!</Text>
@@ -485,7 +490,7 @@ const ContentDetailsScreen = ({route, navigation}: any) => {
             <CustomIcon
               name="account-check"
               size={18}
-              color="COLORS.primary"
+              color={COLORS.primary}
               type="material-community"
             />
             <Text style={styles.ownContentText}>Your Content</Text>
@@ -527,6 +532,17 @@ const ContentDetailsScreen = ({route, navigation}: any) => {
       </View>
 
       {/* Review Modal */}
+      {/* Action Modal */}
+      <ActionModal
+        visible={actionModal.visible}
+        onClose={() => setActionModal(prev => ({...prev, visible: false}))}
+        icon={actionModal.icon}
+        iconColor={actionModal.iconColor}
+        title={actionModal.title}
+        message={actionModal.message}
+        buttons={actionModal.buttons}
+      />
+
       <Modal
         visible={showReviewModal}
         animationType="slide"
@@ -674,7 +690,7 @@ const styles = StyleSheet.create({
   typeText: {
     fontSize: 12,
     fontWeight: '600',
-    color: 'COLORS.primary',
+    color: COLORS.primary,
   },
   title: {
     fontSize: 24,
@@ -786,7 +802,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: '#EEF2FF',
     borderWidth: 2,
-    borderColor: 'COLORS.primary',
+    borderColor: COLORS.primary,
     borderStyle: 'dashed',
     paddingVertical: 14,
     paddingHorizontal: 20,
@@ -796,7 +812,7 @@ const styles = StyleSheet.create({
   previewButtonText: {
     fontSize: 15,
     fontWeight: '600',
-    color: 'COLORS.primary',
+    color: COLORS.primary,
   },
   tagsContainer: {
     flexDirection: 'row',
@@ -815,13 +831,13 @@ const styles = StyleSheet.create({
   },
   addReviewText: {
     fontSize: 14,
-    color: 'COLORS.primary',
+    color: COLORS.primary,
     fontWeight: '600',
   },
   addReviewButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'COLORS.primary',
+    backgroundColor: COLORS.primary,
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 8,
@@ -930,7 +946,7 @@ const styles = StyleSheet.create({
   price: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: 'COLORS.primary',
+    color: COLORS.primary,
   },
   freeText: {
     fontSize: 20,
@@ -939,7 +955,7 @@ const styles = StyleSheet.create({
   },
   purchaseButton: {
     flexDirection: 'row',
-    backgroundColor: 'COLORS.primary',
+    backgroundColor: COLORS.primary,
     paddingHorizontal: 24,
     paddingVertical: 10,
     borderRadius: 10,
@@ -954,10 +970,10 @@ const styles = StyleSheet.create({
   ownContentButton: {
     backgroundColor: '#EEF2FF',
     borderWidth: 1,
-    borderColor: 'COLORS.primary',
+    borderColor: COLORS.primary,
   },
   ownContentText: {
-    color: 'COLORS.primary',
+    color: COLORS.primary,
     fontSize: 14,
     fontWeight: '600',
   },
@@ -1032,7 +1048,7 @@ const styles = StyleSheet.create({
     minHeight: 120,
   },
   submitReviewButton: {
-    backgroundColor: 'COLORS.primary',
+    backgroundColor: COLORS.primary,
     paddingVertical: 16,
     borderRadius: 12,
     alignItems: 'center',

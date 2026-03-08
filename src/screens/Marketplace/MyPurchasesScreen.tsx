@@ -81,7 +81,7 @@ const MyPurchasesScreen = ({navigation}: any) => {
                 : 'notebook'
             }
             size={24}
-            color="COLORS.primary"
+            color={COLORS.primary}
             type="material-community"
           />
         </View>
@@ -121,7 +121,7 @@ const MyPurchasesScreen = ({navigation}: any) => {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="COLORS.primary" />
+        <ActivityIndicator size="large" color={COLORS.primary} />
       </View>
     );
   }
@@ -176,7 +176,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   browseButton: {
-    backgroundColor: 'COLORS.primary',
+    backgroundColor: COLORS.primary,
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 12,
@@ -251,11 +251,11 @@ const styles = StyleSheet.create({
   price: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: 'COLORS.primary',
+    color: COLORS.primary,
   },
   downloadButton: {
     flexDirection: 'row',
-    backgroundColor: 'COLORS.primary',
+    backgroundColor: COLORS.primary,
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 8,

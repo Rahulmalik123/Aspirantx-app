@@ -125,7 +125,7 @@ const MyUploadsScreen = ({navigation}: any) => {
             <CustomIcon
               name="download"
               size={14}
-              color="COLORS.primary"
+              color={COLORS.primary}
               type="material-community"
             />
             <Text style={styles.statText}>{item.totalSales || item.purchaseCount || 0}</Text>
@@ -161,7 +161,7 @@ const MyUploadsScreen = ({navigation}: any) => {
             <TouchableOpacity
               style={styles.editButton}
               onPress={() => handleEditContent(item._id)}>
-              <CustomIcon name="pencil" size={16} color="COLORS.primary" type="material-community" />
+              <CustomIcon name="pencil" size={16} color={COLORS.primary} type="material-community" />
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.deleteButton}
@@ -184,7 +184,7 @@ const MyUploadsScreen = ({navigation}: any) => {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="COLORS.primary" />
+        <ActivityIndicator size="large" color={COLORS.primary} />
       </View>
     );
   }
@@ -210,7 +210,7 @@ const MyUploadsScreen = ({navigation}: any) => {
           <CustomIcon
             name="plus"
             size={24}
-            color="COLORS.primary"
+            color={COLORS.primary}
             type="material-community"
           />
         </TouchableOpacity>
@@ -222,7 +222,7 @@ const MyUploadsScreen = ({navigation}: any) => {
           <CustomIcon
             name="package-variant"
             size={24}
-            color="COLORS.primary"
+            color={COLORS.primary}
             type="material-community"
           />
           <Text style={styles.summaryValue}>{contents.length}</Text>
@@ -296,7 +296,7 @@ const MyUploadsScreen = ({navigation}: any) => {
             <RefreshControl
               refreshing={refreshing}
               onRefresh={onRefresh}
-              colors={['COLORS.primary']}
+              colors={[COLORS.primary]}
             />
           }
         />
@@ -456,7 +456,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   viewButton: {
-    backgroundColor: 'COLORS.primary',
+    backgroundColor: COLORS.primary,
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 8,
@@ -492,7 +492,7 @@ const styles = StyleSheet.create({
   },
   uploadCtaButton: {
     flexDirection: 'row',
-    backgroundColor: 'COLORS.primary',
+    backgroundColor: COLORS.primary,
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 12,
