@@ -101,7 +101,7 @@ const FeedScreen = () => {
     }
   };
 
-  const handleLikePost = async (postId: string) => {
+  const handleLikePost = useCallback(async (postId: string) => {
     try {
       // Optimistically update UI
       setPosts(prev =>
@@ -126,33 +126,33 @@ const FeedScreen = () => {
       // Revert optimistic update
       fetchFeed(1, true);
     }
-  };
+  }, [currentUser?._id, fetchFeed]);
 
-  const handleCommentPress = (postId: string) => {
+  const handleCommentPress = useCallback((postId: string) => {
     setSelectedPostId(postId);
     setCommentModalVisible(true);
-  };
+  }, []);
 
-  const handleCommentModalClose = () => {
+  const handleCommentModalClose = useCallback(() => {
     setCommentModalVisible(false);
     setSelectedPostId(null);
-  };
+  }, []);
 
-  const handleCommentAdded = () => {
+  const handleCommentAdded = useCallback(() => {
     // Refresh feed to update comment counts
     fetchFeed(currentPage, true);
-  };
+  }, [currentPage, fetchFeed]);
 
-  const handleSharePost = async (postId: string) => {
+  const handleSharePost = useCallback(async (postId: string) => {
     const shareUrl = `https://aspirantx.com/post/${postId}`;
     Share.share({
       message: `Check out this post on AspirantX! 📚\n\n${shareUrl}`,
       url: shareUrl, // iOS ke liye
       title: 'Share Post',
     }).catch(() => {});
-  };
+  }, []);
 
-  const handleVoteOnPoll = async (postId: string, optionIndex: number) => {
+  const handleVoteOnPoll = useCallback(async (postId: string, optionIndex: number) => {
     try {
       // Optimistically update UI
       setPosts(prev =>
@@ -188,9 +188,9 @@ const FeedScreen = () => {
       // Revert optimistic update
       fetchFeed(currentPage, true);
     }
-  };
+  }, [currentUser?._id, currentPage, fetchFeed]);
 
-  const handleUserPress = (userId: string) => {
+  const handleUserPress = useCallback((userId: string) => {
     console.log('🔍 [FeedScreen] handleUserPress:', { userId, currentUserId: currentUser?._id });
     // Navigate to user profile
     if (userId === currentUser?._id) {
@@ -200,15 +200,15 @@ const FeedScreen = () => {
       // Navigate to other user's profile
       navigation.navigate('UserProfile', { userId });
     }
-  };
+  }, [currentUser?._id, navigation]);
 
-  const handleEditPost = (postId: string) => {
+  const handleEditPost = useCallback((postId: string) => {
     const post = posts.find(p => p._id === postId);
     if (post) {
       setEditingPost(post);
       setEditModalVisible(true);
     }
-  };
+  }, [posts]);
 
   const handleUpdatePost = async (postId: string, postData: { content: string; hashtags?: string[]; images?: string[] }) => {
     try {
@@ -228,7 +228,7 @@ const FeedScreen = () => {
     }
   };
 
-  const handleDeletePost = (postId: string) => {
+  const handleDeletePost = useCallback((postId: string) => {
     Alert.alert(
       'Delete Post',
       'Are you sure you want to delete this post? This action cannot be undone.',
@@ -256,9 +256,9 @@ const FeedScreen = () => {
         },
       ]
     );
-  };
+  }, []);
 
-  const renderPost = ({ item }: { item: Post }) => (
+  const renderPost = useCallback(({ item }: { item: Post }) => (
     <PostCard
       post={item}
       onLike={handleLikePost}
@@ -269,7 +269,7 @@ const FeedScreen = () => {
       onDelete={handleDeletePost}
       onVote={handleVoteOnPoll}
     />
-  );
+  ), [handleLikePost, handleCommentPress, handleSharePost, handleUserPress, handleEditPost, handleDeletePost, handleVoteOnPoll]);
 
   const renderEmpty = () => {
     if (loading) return null;
@@ -353,6 +353,12 @@ const FeedScreen = () => {
           paddingTop:15
         }}
         showsVerticalScrollIndicator={false}
+        // Performance optimizations
+        removeClippedSubviews={true}
+        maxToRenderPerBatch={5}
+        windowSize={7}
+        initialNumToRender={5}
+        updateCellsBatchingPeriod={100}
       />
 
       {/* Create Post Modal */}

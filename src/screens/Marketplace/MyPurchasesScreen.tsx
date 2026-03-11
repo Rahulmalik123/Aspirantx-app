@@ -25,7 +25,8 @@ const MyPurchasesScreen = ({navigation}: any) => {
   const loadPurchases = async () => {
     try {
       setLoading(true);
-      const data = await contentService.getMyPurchases();
+      const response = await contentService.getMyPurchases();
+      const data = Array.isArray(response) ? response : (response as any)?.data || [];
       setPurchases(data);
     } catch (error) {
       console.error('Failed to load purchases:', error);
@@ -40,26 +41,40 @@ const MyPurchasesScreen = ({navigation}: any) => {
     setRefreshing(false);
   };
 
-  const handleDownload = async (purchaseId: string) => {
+  const handleDownload = async (purchase: Purchase) => {
     try {
-      const response = await contentService.downloadContent(purchaseId);
-      
+      const downloadResponse = await contentService.downloadContent(purchase._id);
+      const response = (downloadResponse as any)?.data || downloadResponse;
+
       if (response.downloadLinks && response.downloadLinks.length > 0) {
-        // Open first link
         const firstLink = response.downloadLinks[0];
-        const supported = await Linking.canOpenURL(firstLink.url);
-        
-        if (supported) {
-          await Linking.openURL(firstLink.url);
+        const isPdf = firstLink.filename?.toLowerCase().endsWith('.pdf') ||
+                      purchase.content.contentType === 'pdf' ||
+                      purchase.content.contentType === 'notes' ||
+                      purchase.content.contentType === 'ebook';
+
+        if (isPdf) {
+          // Open PDF in-app
+          navigation.navigate('PDFViewer', {
+            url: firstLink.url,
+            title: purchase.content.title || response.contentTitle,
+            contentId: purchase.content._id,
+          });
         } else {
-          Alert.alert('Error', 'Cannot open download link');
+          // For non-PDF content (videos etc.), open externally
+          const supported = await Linking.canOpenURL(firstLink.url);
+          if (supported) {
+            await Linking.openURL(firstLink.url);
+          } else {
+            Alert.alert('Error', 'Cannot open download link');
+          }
         }
-        
+
         // Show info about multiple files if applicable
         if (response.downloadLinks.length > 1) {
           Alert.alert(
             'Multiple Files',
-            `This content has ${response.downloadLinks.length} files. Opening first file. Links expire in 24 hours.`,
+            `This content has ${response.downloadLinks.length} files. Opening first file.`,
           );
         }
       }
@@ -110,7 +125,7 @@ const MyPurchasesScreen = ({navigation}: any) => {
         <Text style={styles.price}>₹{item.finalPrice}</Text>
         <TouchableOpacity
           style={styles.downloadButton}
-          onPress={() => handleDownload(item._id)}>
+          onPress={() => handleDownload(item)}>
           <CustomIcon name="download" size={16} color="#FFF" type="material-community" />
           <Text style={styles.downloadButtonText}>Download</Text>
         </TouchableOpacity>

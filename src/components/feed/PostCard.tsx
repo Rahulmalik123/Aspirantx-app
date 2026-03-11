@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, memo } from 'react';
 import {
   View,
   Text,
@@ -28,7 +28,7 @@ interface PostCardProps {
   onVote?: (postId: string, optionIndex: number) => void;
 }
 
-const PostCard: React.FC<PostCardProps> = ({
+const PostCardComponent: React.FC<PostCardProps> = ({
   post,
   onLike,
   onComment,
@@ -676,4 +676,14 @@ const styles = StyleSheet.create({
   },
 });
 
-export default PostCard;
+export default memo(PostCardComponent, (prevProps, nextProps) => {
+  return (
+    prevProps.post._id === nextProps.post._id &&
+    prevProps.post.likes === nextProps.post.likes &&
+    prevProps.post.comments === nextProps.post.comments &&
+    prevProps.post.content === nextProps.post.content &&
+    prevProps.post.isSaved === nextProps.post.isSaved &&
+    prevProps.post.likedBy === nextProps.post.likedBy &&
+    prevProps.post.poll?.options === nextProps.post.poll?.options
+  );
+});

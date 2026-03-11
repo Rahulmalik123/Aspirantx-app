@@ -79,9 +79,9 @@ export const socialService = {
     return apiClient.post(`/api/v1/social/follow/${targetUserId}`);
   },
 
-  // Unfollow user
+  // Unfollow user (backend toggles follow/unfollow on POST)
   unfollowUser: async (targetUserId: string): Promise<any> => {
-    return apiClient.delete(`/api/v1/social/follow/${targetUserId}`);
+    return apiClient.post(`/api/v1/social/follow/${targetUserId}`);
   },
 
   // Get following list of a user

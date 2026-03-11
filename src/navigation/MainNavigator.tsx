@@ -49,6 +49,7 @@ import MarketplaceScreen from '../screens/Marketplace/MarketplaceScreen';
 import ContentDetailsScreen from '../screens/Marketplace/ContentDetailsScreen';
 import MyPurchasesScreen from '../screens/Marketplace/MyPurchasesScreen';
 import MyUploadsScreen from '../screens/Marketplace/MyUploadsScreen';
+import PDFViewerScreen from '../screens/Marketplace/PDFViewerScreen';
 
 // Creator Screens
 import CreatorDashboardScreen from '../screens/creator/CreatorDashboardScreen';
@@ -125,6 +126,7 @@ export type RootStackParamList = {
   Marketplace: undefined;
   ContentDetails: { contentId: string };
   MyPurchases: undefined;
+  PDFViewer: { url: string; title?: string; contentId?: string };
   MyUploads: undefined;
   CreatorDashboard: undefined;
   BecomeCreator: undefined;
@@ -217,10 +219,15 @@ const MainNavigator = () => {
           headerShown: false
         }}
       />
-      <Stack.Screen 
-        name="MyPurchases" 
+      <Stack.Screen
+        name="MyPurchases"
         component={MyPurchasesScreen}
         options={{ title: 'My Purchases' }}
+      />
+      <Stack.Screen
+        name="PDFViewer"
+        component={PDFViewerScreen}
+        options={{ headerShown: false }}
       />
       <Stack.Screen 
         name="MyUploads" 

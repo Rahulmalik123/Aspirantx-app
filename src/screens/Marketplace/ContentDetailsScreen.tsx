@@ -64,6 +64,7 @@ const ContentDetailsScreen = ({route, navigation}: any) => {
       console.log('📝 [ContentDetails] Content:', contentData);
       console.log('🖼️ [ContentDetails] Thumbnail:', contentData?.thumbnail);
       console.log('🎨 [ContentDetails] Content Type:', contentData?.contentType);
+      console.log('🛒 [ContentDetails] isPurchased:', contentData?.isPurchased);
       setContent(contentData);
       setReviews(reviewsData);
     } catch (error) {
@@ -96,6 +97,7 @@ const ContentDetailsScreen = ({route, navigation}: any) => {
         setPurchasing(true);
         await contentService.purchaseContent(contentId);
         showSuccessToast('Content added to your library!');
+        setContent(prev => prev ? {...prev, isPurchased: true} : prev);
         loadContentDetails();
       } catch (error: any) {
         showErrorToast('Error', error.message || 'Failed to get content');
@@ -115,6 +117,7 @@ const ContentDetailsScreen = ({route, navigation}: any) => {
         setPurchasing(true);
         await contentService.purchaseContent(contentId);
         showSuccessToast('Purchase Successful!', 'Content added to your library');
+        setContent(prev => prev ? {...prev, isPurchased: true} : prev);
         loadContentDetails();
       } catch (error: any) {
         const errorMsg = error.message || 'Purchase failed';
@@ -157,23 +160,78 @@ const ContentDetailsScreen = ({route, navigation}: any) => {
     });
   };
 
-  const handleDownload = () => {
+  const handleDownload = async () => {
     if (!content || !content.isPurchased) return;
-    navigation.navigate('MyPurchases');
+
+    try {
+      // Find the purchaseId for this content from user's purchases
+      const purchasesResponse = await contentService.getMyPurchases();
+      const purchasesList = Array.isArray(purchasesResponse)
+        ? purchasesResponse
+        : (purchasesResponse as any)?.data || [];
+      const purchase = purchasesList.find(
+        (p: any) => p.content?._id === contentId || p.content === contentId,
+      );
+
+      if (!purchase) {
+        showErrorToast('Purchase not found', 'Please try from My Purchases');
+        return;
+      }
+
+      const downloadResponse = await contentService.downloadContent(purchase._id);
+      const response = (downloadResponse as any)?.data || downloadResponse;
+      if (response.downloadLinks && response.downloadLinks.length > 0) {
+        const firstLink = response.downloadLinks[0];
+        const isPdf = firstLink.filename?.toLowerCase().endsWith('.pdf') ||
+                      content.contentType === 'pdf' ||
+                      content.contentType === 'notes' ||
+                      content.contentType === 'ebook';
+
+        if (isPdf) {
+          navigation.navigate('PDFViewer', {
+            url: firstLink.url,
+            title: content.title,
+            contentId: contentId,
+          });
+        } else {
+          const supported = await Linking.canOpenURL(firstLink.url);
+          if (supported) {
+            await Linking.openURL(firstLink.url);
+          } else {
+            showErrorToast('Cannot open this content');
+          }
+        }
+      }
+    } catch (error: any) {
+      showErrorToast('Download Failed', error.message || 'Failed to get download link');
+    }
   };
 
   const handlePreview = async () => {
     if (!content || !content.previewUrl) return;
-    
-    try {
-      const supported = await Linking.canOpenURL(content.previewUrl);
-      if (supported) {
-        await Linking.openURL(content.previewUrl);
-      } else {
-        showErrorToast('Cannot open preview');
+
+    const isPdf = content.previewUrl.toLowerCase().endsWith('.pdf') ||
+                  content.contentType === 'pdf' ||
+                  content.contentType === 'notes' ||
+                  content.contentType === 'ebook';
+
+    if (isPdf) {
+      navigation.navigate('PDFViewer', {
+        url: content.previewUrl,
+        title: `Preview - ${content.title}`,
+        contentId: contentId,
+      });
+    } else {
+      try {
+        const supported = await Linking.canOpenURL(content.previewUrl);
+        if (supported) {
+          await Linking.openURL(content.previewUrl);
+        } else {
+          showErrorToast('Cannot open preview');
+        }
+      } catch (error) {
+        showErrorToast('Failed to open preview');
       }
-    } catch (error) {
-      showErrorToast('Failed to open preview');
     }
   };
 
